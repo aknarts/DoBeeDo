@@ -4,6 +4,8 @@ This module is responsible for registering the custom DoBeeDo panel in the
 Home Assistant sidebar. The panel is implemented as a web component bundle
 built by the frontend project and served as a static asset.
 """
+import logging
+
 from __future__ import annotations
 
 from homeassistant.components.frontend import async_register_built_in_panel
@@ -12,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, URL_BASE
 from homeassistant.components.http import StaticPathConfig
 
+LOGGER: logging.Logger = logging.getLogger(DOMAIN)
 
 PANEL_TITLE = "DoBeeDo"
 PANEL_ICON = "mdi:checkbox-marked-circle-plus-outline"
@@ -33,6 +36,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     approach used by the HACS integration itself.
     """
 
+    LOGGER.info("Registering DoBeeDo static path on %s from %s", f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www")
     await hass.http.async_register_static_paths([
         StaticPathConfig(f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www", False),
     ])
