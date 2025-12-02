@@ -1,0 +1,13 @@
+{
+  "domain": "dobeedo",
+  "name": "DoBeeDo Task Boards",
+  "version": "0.0.1",
+  "documentation": "https://github.com/aknarts/DoBeeDo",
+  "issue_tracker": "https://github.com/aknarts/DoBeeDo/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@aknarts"],
+  "iot_class": "local_push",
+  "integration_type": "hub",
+  "config_flow": true
+}

@@ -1,0 +1,11 @@
+{
+}
+  "iot_class": "local_push"
+  "domains": ["dobeedo"],
+  "render_readme": true,
+  "homeassistant": "2024.0.0",
+  "country": "",
+  "filename": "",
+  "content_in_root": false,
+  "name": "DoBeeDo Task Boards",
+

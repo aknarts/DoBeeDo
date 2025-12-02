@@ -1,0 +1,23 @@
+__pycache__/
+.idea/
+.vscode/
+# Editors
+
+.storage/
+# Home Assistant
+
+coverage/
+.build/
+dist/
+node_modules/
+# Node / frontend
+
+.mypy_cache/
+.pytest_cache/
+.cache/
+venv/
+.venv
+.env
+*.egg-info/
+*.py[cod]
+
