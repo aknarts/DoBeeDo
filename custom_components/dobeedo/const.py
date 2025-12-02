@@ -4,6 +4,8 @@ DOMAIN = "dobeedo"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
+URL_BASE = "/hacsfiles"
+
 EVENT_BOARD_CREATED = f"{DOMAIN}_board_created"
 EVENT_BOARD_UPDATED = f"{DOMAIN}_board_updated"
 EVENT_BOARD_DELETED = f"{DOMAIN}_board_deleted"

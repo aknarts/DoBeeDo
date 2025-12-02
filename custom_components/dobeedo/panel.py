@@ -34,7 +34,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     """
 
     await async_register_static_path(
-        hass, f"{URL_BASE}/frontend", f"dobeedo/www", cache_headers=False
+        hass, f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www", cache_headers=False
     )
 
     # Ensure the panel is only registered once.
