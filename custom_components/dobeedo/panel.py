@@ -9,7 +9,8 @@ from __future__ import annotations
 from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, URL_BASE
+from .utils.workarounds import async_register_static_path
 
 
 PANEL_TITLE = "DoBeeDo"
@@ -31,6 +32,10 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     and points it at that JS entrypoint via ``js_url``. This mirrors the
     approach used by the HACS integration itself.
     """
+
+    await async_register_static_path(
+        hass, f"{URL_BASE}/frontend", f"dobeedo/www", cache_headers=False
+    )
 
     # Ensure the panel is only registered once.
     if hass.data.get(f"{DOMAIN}_panel_registered"):
