@@ -136,9 +136,9 @@ Under `tests/components/dobeedo/`:
 - [x] Implement `panel.py` in the backend:
   - [x] Register a sidebar panel via Home Assistant’s frontend API.
   - [x] Use an appropriate icon (e.g., `mdi:view-kanban`).
-  - [x] Point to the built panel JS resource (currently via `/local/dobeedo/dobee-do-panel.js` as a dev-friendly path).
+  - [x] Point to the built panel JS resource via `/local/dobeedo/dobee-do-panel.js` (served from `<config>/www/dobeedo`).
 - [ ] Refine static asset serving:
-  - [ ] Decide on final `module_url` that maps directly to `custom_components/dobeedo/www` for HACS installs.
+  - [ ] Decide on final deployment strategy so HACS installs ship the bundle in a location that does not require a manual copy into `/config/www`.
   - [ ] Update docs and/or build pipeline accordingly.
 
 ### 2.3 Panel Shell & Routing

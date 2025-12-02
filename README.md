@@ -120,21 +120,24 @@ Until this project is published as an official HACS repository, you can install 
 
    This will output `dobee-do-panel.js` into `custom_components/dobeedo/www/`.
 
-3. **(Temporary dev step)** If your Home Assistant instance does not yet serve integration `www` assets directly as a module, you can copy or symlink the bundle into `/config/www/dobeedo/` so it is reachable under `/local/dobeedo/dobee-do-panel.js`:
+3. **Make the bundle available under `/local` for the panel** by copying it into Home Assistant's `www` directory:
 
    ```bash
-   mkdir -p /config/www/dobeedo
-   cp ../custom_components/dobeedo/www/dobee-do-panel.js /config/www/dobeedo/
+   cd /config
+   mkdir -p www/dobeedo
+   cp custom_components/dobeedo/www/dobee-do-panel.js www/dobeedo/
    ```
+
+   Home Assistant will then serve the panel bundle at `/local/dobeedo/dobee-do-panel.js`, which matches the panel registration.
 
 4. **Restart Home Assistant.**
 
 5. In Home Assistant, go to **Settings → Devices & Services → Add Integration** and search for **DoBeeDo**.
 
    - Add the integration (there are currently no options).
-   - Once added, a **DoBeeDo** entry should appear in the left sidebar.
+   - Once added, a **DoBeeDo** entry should appear in the left sidebar. Clicking it should load the DoBeeDo panel from the bundle you just built.
 
-As the integration matures and HACS metadata (`hacs.json`) is added, you’ll be able to add it directly as a custom repository in HACS.
+As the integration matures and HACS metadata (`hacs.json`) is added, the build and deployment story can be streamlined so the bundle is always shipped in a place HACS/HA serve automatically.
 
 ### Configuration options
 
