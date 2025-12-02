@@ -38,6 +38,9 @@ export class DoBeeDoPanel extends LitElement {
   @state()
   private _selectedBoardId: string | null = null;
 
+  @state()
+  private _selectedColumnId: string | null = null;
+
   static get styles(): CSSResultGroup {
     return css`
       :host {
@@ -140,11 +143,19 @@ export class DoBeeDoPanel extends LitElement {
     if (!this.hass || !this._selectedBoardId) {
       this._columns = [];
       this._tasks = [];
+      this._selectedColumnId = null;
       return;
     }
     const api = new DoBeeDoApiClient(this.hass.connection);
     this._columns = await api.getColumns(this._selectedBoardId);
     this._tasks = await api.getTasks(this._selectedBoardId);
+
+    // Ensure selected column stays valid.
+    if (this._columns.length === 0) {
+      this._selectedColumnId = null;
+    } else if (!this._selectedColumnId || !this._columns.some((c) => c.id === this._selectedColumnId)) {
+      this._selectedColumnId = this._columns[0].id;
+    }
   }
 
   private async _refreshTasksForSelectedBoard(): Promise<void> {
@@ -175,10 +186,10 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    const columnId = this._columns[0]?.id;
+    const columnId = this._selectedColumnId;
     if (!columnId) {
       // eslint-disable-next-line no-console
-      console.warn("No column available on the selected board to create a task in.");
+      console.warn("No column selected on the selected board to create a task in.");
       return;
     }
 
@@ -186,7 +197,6 @@ export class DoBeeDoPanel extends LitElement {
       const newTask = await api.createTask(board.id, columnId, this._newTaskTitle.trim());
       this._newTaskTitle = "";
 
-      // Optimistically update the task list if we are still on the same board.
       if (board.id === this._selectedBoardId) {
         this._tasks = [...this._tasks, newTask];
       } else {
@@ -299,7 +309,7 @@ export class DoBeeDoPanel extends LitElement {
                         })}
                   </div>
 
-                  <div style="margin-top: 16px;">
+                  <div style="margin-top: 16px; display: flex; gap: 8px; align-items: center;">
                     <input
                       type="text"
                       .value=${this._newTaskTitle}
@@ -309,9 +319,28 @@ export class DoBeeDoPanel extends LitElement {
                         this._newTaskTitle = target.value;
                       }}
                     />
-                    <button @click=${() => this._handleCreateTask()} ?disabled=${
-                      !this._newTaskTitle.trim() || this._loading || !this._selectedBoardId
-                    }>
+
+                    <select
+                      .value=${this._selectedColumnId ?? ""}
+                      @change=${(ev: Event) => {
+                        const target = ev.target as HTMLSelectElement;
+                        this._selectedColumnId = target.value || null;
+                      }}
+                    >
+                      ${this._columns.map(
+                        (col) => html`<option value=${col.id}>${col.name}</option>`,
+                      )}
+                    </select>
+
+                    <button
+                      @click=${() => this._handleCreateTask()}
+                      ?disabled=${
+                        !this._newTaskTitle.trim() ||
+                        this._loading ||
+                        !this._selectedBoardId ||
+                        !this._selectedColumnId
+                      }
+                    >
                       Add task
                     </button>
                   </div>
