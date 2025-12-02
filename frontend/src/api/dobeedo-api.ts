@@ -10,6 +10,13 @@ export interface DoBeeDoBoardSummary {
   description?: string;
 }
 
+export interface DoBeeDoColumnSummary {
+  id: string;
+  board_id: string;
+  name: string;
+  order_index: number;
+}
+
 export interface DoBeeDoTaskSummary {
   id: string;
   board_id: string;
@@ -49,6 +56,34 @@ export class DoBeeDoApiClient {
     });
 
     return response.boards ?? [];
+  }
+
+  public async getColumns(boardId: string): Promise<DoBeeDoColumnSummary[]> {
+    const response = await this.connection.sendMessagePromise<{
+      columns?: DoBeeDoColumnSummary[];
+    }>({
+      type: "dobeedo/get_columns",
+      board_id: boardId,
+    });
+
+    return response.columns ?? [];
+  }
+
+  public async createColumn(
+    boardId: string,
+    name: string,
+    orderIndex?: number,
+  ): Promise<DoBeeDoColumnSummary> {
+    const response = await this.connection.sendMessagePromise<{
+      column: DoBeeDoColumnSummary;
+    }>({
+      type: "dobeedo/create_column",
+      board_id: boardId,
+      name,
+      order_index: orderIndex,
+    });
+
+    return response.column;
   }
 
   public async getTasks(boardId: string): Promise<DoBeeDoTaskSummary[]> {

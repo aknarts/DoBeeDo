@@ -123,6 +123,14 @@ class DobeeDoManager:
     # Column helpers
     # ---------------------------------------------------------------------
 
+    async def async_get_columns_for_board(self, board_id: str) -> List[Column]:
+        """Return all columns for a board in order_index order."""
+
+        board = self._boards.get(board_id)
+        if board is None or not board.column_ids:
+            return []
+        return [self._columns[cid] for cid in board.column_ids if cid in self._columns]
+
     async def async_create_column(
         self, board_id: str, name: str, order_index: int | None = None
     ) -> Column:

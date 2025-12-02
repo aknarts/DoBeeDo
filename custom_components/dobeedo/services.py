@@ -18,6 +18,9 @@ ATTR_BOARD_ID = "board_id"
 ATTR_BOARD_NAME = "name"
 ATTR_BOARD_DESCRIPTION = "description"
 
+ATTR_COLUMN_NAME = "name"
+ATTR_COLUMN_ORDER_INDEX = "order_index"
+
 ATTR_TASK_ID = "task_id"
 ATTR_COLUMN_ID = "column_id"
 ATTR_TASK_TITLE = "title"
@@ -58,6 +61,20 @@ async def _async_handle_update_board(hass: HomeAssistant, call: ServiceCall) -> 
 
     try:
         await manager.async_update_board(board_id, **updates)
+    except KeyError as err:
+        raise HomeAssistantError(f"Unknown board id: {err}") from err
+
+
+async def _async_handle_create_column(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Create a new column on a board."""
+
+    manager = _get_manager(hass)
+    board_id = call.data[ATTR_BOARD_ID]
+    name = call.data[ATTR_COLUMN_NAME]
+    order_index = call.data.get(ATTR_COLUMN_ORDER_INDEX)
+
+    try:
+        await manager.async_create_column(board_id, name, order_index=order_index)
     except KeyError as err:
         raise HomeAssistantError(f"Unknown board id: {err}") from err
 
@@ -121,6 +138,14 @@ CREATE_BOARD_SCHEMA = vol.Schema(
     }
 )
 
+CREATE_COLUMN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_BOARD_ID): cv.string,
+        vol.Required(ATTR_COLUMN_NAME): cv.string,
+        vol.Optional(ATTR_COLUMN_ORDER_INDEX): cv.positive_int,
+    }
+)
+
 UPDATE_BOARD_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_BOARD_ID): cv.string,
@@ -173,6 +198,13 @@ def async_register_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
+        "create_column",
+        _async_handle_create_column,
+        schema=CREATE_COLUMN_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
         "update_board",
         _async_handle_update_board,
         schema=UPDATE_BOARD_SCHEMA,
@@ -205,4 +237,3 @@ def async_register_services(hass: HomeAssistant) -> None:
         _async_handle_delete_task,
         schema=DELETE_TASK_SCHEMA,
     )
-

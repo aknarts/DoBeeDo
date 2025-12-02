@@ -91,6 +91,34 @@ async def websocket_get_tasks(
 
 
 @websocket_api.websocket_command(
+    {"type": f"{DOMAIN}/get_columns", "board_id": str},
+)
+@websocket_api.async_response
+async def websocket_get_columns(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return all columns for a given board.
+
+    Request payload::
+
+        {"type": "dobeedo/get_columns", "board_id": "board-1"}
+
+    Response payload::
+
+        {"columns": [...]}  # list of serialized Column dicts in order_index order
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_result(msg["id"], {"columns": []})
+        return
+
+    board_id = msg["board_id"]
+    columns = [col.to_dict() for col in await manager.async_get_columns_for_board(board_id)]
+    connection.send_result(msg["id"], {"columns": columns})
+
+
+@websocket_api.websocket_command(
     {
         "type": f"{DOMAIN}/create_task",
         "board_id": str,
@@ -200,6 +228,42 @@ async def websocket_move_task(
     connection.send_result(msg["id"], {"task": task.to_dict()})
 
 
+@websocket_api.websocket_command(
+    {
+        "type": f"{DOMAIN}/create_column",
+        "board_id": str,
+        "name": str,
+        # Optional order_index may be omitted.
+    }
+)
+@websocket_api.async_response
+async def websocket_create_column(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create a new column on a board.
+
+    Required fields: ``board_id``, ``name``.
+    Optional field: ``order_index``.
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    try:
+        column = await manager.async_create_column(
+            msg["board_id"],
+            msg["name"],
+            order_index=msg.get("order_index"),
+        )
+    except KeyError as err:
+        connection.send_error(msg["id"], "not_found", f"Unknown board id: {err}")
+        return
+
+    connection.send_result(msg["id"], {"column": column.to_dict()})
+
+
 @websocket_api.websocket_command({"type": f"{DOMAIN}/subscribe_updates"})
 @websocket_api.async_response
 async def websocket_subscribe_updates(
@@ -262,6 +326,8 @@ def async_register_api(hass: HomeAssistant) -> None:
 
     websocket_api.async_register_command(hass, websocket_get_boards)
     websocket_api.async_register_command(hass, websocket_get_tasks)
+    websocket_api.async_register_command(hass, websocket_get_columns)
+    websocket_api.async_register_command(hass, websocket_create_column)
     websocket_api.async_register_command(hass, websocket_create_task)
     websocket_api.async_register_command(hass, websocket_update_task)
     websocket_api.async_register_command(hass, websocket_move_task)

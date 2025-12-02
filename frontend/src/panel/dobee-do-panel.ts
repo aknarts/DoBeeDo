@@ -1,6 +1,6 @@
 import { css, CSSResultGroup, html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { DoBeeDoBoardSummary, DoBeeDoTaskSummary, DoBeeDoEventMessage } from "../api/dobeedo-api";
+import type { DoBeeDoBoardSummary, DoBeeDoTaskSummary, DoBeeDoEventMessage, DoBeeDoColumnSummary } from "../api/dobeedo-api";
 import { DoBeeDoApiClient, type HassConnection } from "../api/dobeedo-api";
 
 // Minimal type for the Home Assistant hass object; this will be expanded later.
@@ -21,10 +21,16 @@ export class DoBeeDoPanel extends LitElement {
   private _tasks: DoBeeDoTaskSummary[] = [];
 
   @state()
+  private _columns: DoBeeDoColumnSummary[] = [];
+
+  @state()
   private _loading = false;
 
   @state()
   private _newTaskTitle = "";
+
+  @state()
+  private _newColumnName = "";
 
   @state()
   private _unsubscribeUpdates: (() => void) | null = null;
@@ -114,13 +120,24 @@ export class DoBeeDoPanel extends LitElement {
         this._selectedBoardId = this._boards[0].id;
       }
 
-      await this._refreshTasksForSelectedBoard();
+      await this._refreshColumnsAndTasks();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to load DoBeeDo data", err);
     } finally {
       this._loading = false;
     }
+  }
+
+  private async _refreshColumnsAndTasks(): Promise<void> {
+    if (!this.hass || !this._selectedBoardId) {
+      this._columns = [];
+      this._tasks = [];
+      return;
+    }
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    this._columns = await api.getColumns(this._selectedBoardId);
+    this._tasks = await api.getTasks(this._selectedBoardId);
   }
 
   private async _refreshTasksForSelectedBoard(): Promise<void> {
@@ -137,7 +154,7 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
     this._selectedBoardId = board.id;
-    void this._refreshTasksForSelectedBoard();
+    void this._refreshColumnsAndTasks();
   }
 
   private async _handleCreateTask(): Promise<void> {
@@ -151,7 +168,7 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    const columnId = (board as any).column_ids?.[0];
+    const columnId = this._columns[0]?.id;
     if (!columnId) {
       // eslint-disable-next-line no-console
       console.warn("No column available on the selected board to create a task in.");
@@ -171,6 +188,24 @@ export class DoBeeDoPanel extends LitElement {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to create DoBeeDo task", err);
+    }
+  }
+
+  private async _handleCreateColumn(): Promise<void> {
+    if (!this.hass || !this._selectedBoardId || !this._newColumnName.trim()) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      const newColumn = await api.createColumn(this._selectedBoardId, this._newColumnName.trim());
+      this._newColumnName = "";
+
+      // Append the new column locally so the UI updates immediately.
+      this._columns = [...this._columns, newColumn];
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create DoBeeDo column", err);
     }
   }
 
@@ -217,7 +252,47 @@ export class DoBeeDoPanel extends LitElement {
                     Tasks on ${selectedBoard ? selectedBoard.name : "(no board selected)"}
                   </div>
 
-                  <div>
+                  <div style="margin-bottom: 16px;">
+                    <input
+                      type="text"
+                      .value=${this._newColumnName}
+                      placeholder="New column name"
+                      @input=${(ev: Event) => {
+                        const target = ev.target as HTMLInputElement;
+                        this._newColumnName = target.value;
+                      }}
+                    />
+                    <button
+                      @click=${() => this._handleCreateColumn()}
+                      ?disabled=${!this._newColumnName.trim() || !this._selectedBoardId}
+                    >
+                      Add column
+                    </button>
+                  </div>
+
+                  <div style="display: flex; gap: 16px; align-items: flex-start;">
+                    ${this._columns.length === 0
+                      ? html`<p>No columns defined for this board yet.</p>`
+                      : this._columns.map((col) => {
+                          const tasksForColumn = this._tasks
+                            .filter((task) => task.column_id === col.id)
+                            .sort((a, b) => a.sort_index - b.sort_index);
+                          return html`
+                            <div>
+                              <div class="board-name">${col.name}</div>
+                              ${tasksForColumn.length === 0
+                                ? html`<p>No tasks in this column.</p>`
+                                : html`<ul>
+                                    ${tasksForColumn.map(
+                                      (task) => html`<li class="task-item">${task.title}</li>`,
+                                    )}
+                                  </ul>`}
+                            </div>
+                          `;
+                        })}
+                  </div>
+
+                  <div style="margin-top: 16px;">
                     <input
                       type="text"
                       .value=${this._newTaskTitle}
@@ -233,16 +308,6 @@ export class DoBeeDoPanel extends LitElement {
                       Add task
                     </button>
                   </div>
-
-                  ${this._tasks.length === 0
-                    ? html`<p>No tasks yet.</p>`
-                    : html`
-                        <ul>
-                          ${this._tasks.map(
-                            (task) => html`<li class="task-item">${task.title}</li>`,
-                          )}
-                        </ul>
-                      `}
                 `}
           `}
       <p>
