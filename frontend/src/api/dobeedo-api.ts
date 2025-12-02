@@ -84,12 +84,14 @@ export class DoBeeDoApiClient {
   ): () => void {
     const anyConn = this.connection as any;
     if (!anyConn.subscribeMessage) {
-      // If the connection does not support subscribeMessage, we cannot
-      // receive pushed events; return a no-op unsubscribe.
+      // eslint-disable-next-line no-console
+      console.warn("DoBeeDo: connection.subscribeMessage is not available");
       return () => {};
     }
 
     const handler = (msg: any) => {
+      // eslint-disable-next-line no-console
+      console.debug("DoBeeDo: raw WS message in subscribeUpdates handler", msg);
       if (msg?.type === "dobeedo/event" && msg.event_type && msg.payload) {
         onEvent({
           event_type: msg.event_type,
@@ -99,13 +101,15 @@ export class DoBeeDoApiClient {
       }
     };
 
-    // Use Home Assistant's standard pattern: subscribeMessage both sends
-    // the subscribe command and routes matching responses to the handler.
+    // eslint-disable-next-line no-console
+    console.debug("DoBeeDo: calling connection.subscribeMessage for subscribe_updates");
     const unsubscribe = anyConn.subscribeMessage(handler, {
       type: "dobeedo/subscribe_updates",
     });
 
     return () => {
+      // eslint-disable-next-line no-console
+      console.debug("DoBeeDo: unsubscribe from subscribe_updates");
       unsubscribe();
     };
   }
