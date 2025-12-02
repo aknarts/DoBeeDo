@@ -128,7 +128,7 @@ Under `tests/components/dobeedo/`:
   - [x] `lit` for web components.
   - [x] TypeScript, Vite, Vitest as dev dependencies.
 - [x] Decide output paths:
-  - [x] Panel bundle: `custom_components/dobeedo/www/dobee-do-panel.js` via Vite build.
+  - [x] Panel bundle: `custom_components/dobeedo/www/dobee-do-panel.js` via Vite build, served via `/hacsfiles/dobeedo/dobee-do-panel.js` when installed through HACS.
   - [ ] Card bundle(s): `custom_components/dobeedo/www/dobee-do-cards.js`.
 
 ### 2.2 Panel Registration
@@ -136,9 +136,9 @@ Under `tests/components/dobeedo/`:
 - [x] Implement `panel.py` in the backend:
   - [x] Register a sidebar panel via Home Assistant’s frontend API.
   - [x] Use an appropriate icon (e.g., `mdi:view-kanban`).
-  - [x] Point to the built panel JS resource via `/local/dobeedo/dobee-do-panel.js` (served from `<config>/www/dobeedo`).
+  - [x] Load the panel JS via a `_panel_custom` entry using `js_url: /hacsfiles/dobeedo/dobee-do-panel.js`.
 - [ ] Refine static asset serving:
-  - [ ] Decide on final deployment strategy so HACS installs ship the bundle in a location that does not require a manual copy into `/config/www`.
+  - [ ] Confirm HACS layout and ensure the JS bundle is included under `custom_components/dobeedo/www` in releases.
   - [ ] Update docs and/or build pipeline accordingly.
 
 ### 2.3 Panel Shell & Routing
@@ -274,8 +274,7 @@ These are areas to refine as implementation continues. Feel free to adjust and e
 3. **Per-user preferences storage**
    - Decide whether to use HA’s user storage (if available) or browser local storage for panel filters.
 4. **Static asset serving vs `/local` path**
-   - Finalize whether DoBeeDo should rely on `/local` for the panel bundle in production, or use an integration-local static path served from `custom_components/dobeedo/www`.
-   - **Current status:** Panel registration expects the panel bundle at `/local/dobeedo/dobee-do-panel.js`, which requires the file to exist in `<config>/www/dobeedo`. The frontend build writes to `custom_components/dobeedo/www/`, so packaging or installation steps must ensure the file is also available under `/config/www/dobeedo/`.
+   - **Current status:** Panel registration uses `_panel_custom` with `js_url: /hacsfiles/dobeedo/dobee-do-panel.js`, and the frontend build writes to `custom_components/dobeedo/www/`. HACS will expose that directory under `/hacsfiles/dobeedo/`, so no manual copy into `<config>/www` is required when installed via HACS.
 
 ---
 

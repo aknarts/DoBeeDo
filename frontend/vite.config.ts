@@ -10,11 +10,8 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Output directly into the Home Assistant /local-served path.
-        // When this project is located under <config>/custom_components/dobeedo/frontend,
-        // this resolves to <config>/www/dobeedo/dobee-do-panel.js, which matches MODULE_URL
-        // in panel.py ("/local/dobeedo/dobee-do-panel.js").
-        dir: "../www/dobeedo",
+        // Build into the integration's www folder; HACS will expose this via /hacsfiles.
+        dir: "../custom_components/dobeedo/www",
         entryFileNames: "dobee-do-panel.js",
       },
     },
