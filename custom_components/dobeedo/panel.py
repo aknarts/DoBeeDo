@@ -10,7 +10,7 @@ from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, URL_BASE
-from .utils.workarounds import async_register_static_path
+from homeassistant.components.http import StaticPathConfig
 
 
 PANEL_TITLE = "DoBeeDo"
@@ -33,9 +33,9 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     approach used by the HACS integration itself.
     """
 
-    await async_register_static_path(
-        hass, f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www", cache_headers=False
-    )
+    await hass.http.async_register_static_paths([
+        StaticPathConfig(f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www", False),
+    ])
 
     # Ensure the panel is only registered once.
     if hass.data.get(f"{DOMAIN}_panel_registered"):
