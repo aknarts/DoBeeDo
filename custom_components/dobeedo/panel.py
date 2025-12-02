@@ -36,9 +36,9 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     approach used by the HACS integration itself.
     """
 
-    LOGGER.info("Registering DoBeeDo static path on %s from %s", f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www")
+    LOGGER.error("Registering DoBeeDo static path on %s from %s", f"{URL_BASE}/{DOMAIN}", f"/config/custom_components/{DOMAIN}/www")
     await hass.http.async_register_static_paths([
-        StaticPathConfig(f"{URL_BASE}/{DOMAIN}", f"{DOMAIN}/www", False),
+        StaticPathConfig(f"{URL_BASE}/{DOMAIN}", f"/config/custom_components/{DOMAIN}/www", False),
     ])
 
     # Ensure the panel is only registered once.
