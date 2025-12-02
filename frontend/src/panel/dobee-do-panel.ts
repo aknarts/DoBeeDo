@@ -1,6 +1,6 @@
 import { css, CSSResultGroup, html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import type { DoBeeDoBoardSummary, DoBeeDoTaskSummary } from "../api/dobeedo-api";
+import type { DoBeeDoBoardSummary, DoBeeDoTaskSummary, DoBeeDoEventMessage } from "../api/dobeedo-api";
 import { DoBeeDoApiClient, type HassConnection } from "../api/dobeedo-api";
 
 // Minimal type for the Home Assistant hass object; this will be expanded later.
@@ -25,6 +25,12 @@ export class DoBeeDoPanel extends LitElement {
 
   @state()
   private _newTaskTitle = "";
+
+  @state()
+  private _unsubscribeUpdates: (() => void) | null = null;
+
+  @state()
+  private _selectedBoardId: string | null = null;
 
   static get styles(): CSSResultGroup {
     return css`
@@ -69,9 +75,18 @@ export class DoBeeDoPanel extends LitElement {
 
   protected updated(changedProps: Map<string | number | symbol, unknown>): void {
     if (changedProps.has("hass") && this.hass) {
-      // Whenever hass becomes available, fetch the list of boards from the
-      // backend via the DoBeeDo WebSocket API.
-      this._fetchBoards();
+      void this._fetchBoards();
+
+      if (!this._unsubscribeUpdates) {
+        const api = new DoBeeDoApiClient(this.hass.connection);
+        this._unsubscribeUpdates = api.subscribeUpdates((evt: DoBeeDoEventMessage) => {
+          if (evt.event_type.startsWith("task_")) {
+            void this._refreshTasksForSelectedBoard();
+          } else if (evt.event_type.startsWith("board_")) {
+            void this._fetchBoards();
+          }
+        });
+      }
     }
   }
 
@@ -84,15 +99,13 @@ export class DoBeeDoPanel extends LitElement {
     try {
       const api = new DoBeeDoApiClient(this.hass.connection);
       this._boards = await api.getBoards();
-      this._tasks = [];
 
-      if (this._boards.length > 0) {
-        const firstBoard = this._boards[0];
-        this._tasks = await api.getTasks(firstBoard.id);
+      if (!this._selectedBoardId && this._boards.length > 0) {
+        this._selectedBoardId = this._boards[0].id;
       }
+
+      await this._refreshTasksForSelectedBoard();
     } catch (err) {
-      // For now, just log to the console; later we can surface a toast or
-      // in-panel error state.
       // eslint-disable-next-line no-console
       console.error("Failed to load DoBeeDo data", err);
     } finally {
@@ -100,36 +113,62 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _refreshTasksForSelectedBoard(): Promise<void> {
+    if (!this.hass || !this._selectedBoardId) {
+      this._tasks = [];
+      return;
+    }
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    this._tasks = await api.getTasks(this._selectedBoardId);
+  }
+
+  private _handleSelectBoard(board: DoBeeDoBoardSummary): void {
+    if (this._selectedBoardId === board.id) {
+      return;
+    }
+    this._selectedBoardId = board.id;
+    void this._refreshTasksForSelectedBoard();
+  }
+
   private async _handleCreateTask(): Promise<void> {
-    if (!this.hass || this._boards.length === 0 || !this._newTaskTitle.trim()) {
+    if (!this.hass || !this._selectedBoardId || !this._newTaskTitle.trim()) {
       return;
     }
 
     const api = new DoBeeDoApiClient(this.hass.connection);
-    const board = this._boards[0];
+    const board = this._boards.find((b) => b.id === this._selectedBoardId);
+    if (!board) {
+      return;
+    }
 
-    // For now we assume the first column is the default target; later we can
-    // surface real column selection once columns are exposed on the backend.
     const columnId = (board as any).column_ids?.[0];
     if (!columnId) {
       // eslint-disable-next-line no-console
-      console.warn("No column available on the first board to create a task in.");
+      console.warn("No column available on the selected board to create a task in.");
       return;
     }
 
     try {
       await api.createTask(board.id, columnId, this._newTaskTitle.trim());
-
-      // Clear the input and refresh the task list.
       this._newTaskTitle = "";
-      this._tasks = await api.getTasks(board.id);
+      await this._refreshTasksForSelectedBoard();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to create DoBeeDo task", err);
     }
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._unsubscribeUpdates) {
+      this._unsubscribeUpdates();
+      this._unsubscribeUpdates = null;
+    }
+  }
+
   protected render(): TemplateResult {
+    const selectedBoard = this._boards.find((b) => b.id === this._selectedBoardId) ?? null;
+
     return html`
       <h1>DoBeeDo</h1>
       ${this._loading
@@ -141,7 +180,12 @@ export class DoBeeDoPanel extends LitElement {
                   <ul>
                     ${this._boards.map(
                       (board) => html`
-                        <li>
+                        <li
+                          @click=${() => this._handleSelectBoard(board)}
+                          style="cursor: pointer; ${
+                            board.id === this._selectedBoardId ? "font-weight: 700;" : ""
+                          }"
+                        >
                           <div class="board-name">${board.name}</div>
                           ${board.description
                             ? html`<div class="board-description">
@@ -153,7 +197,9 @@ export class DoBeeDoPanel extends LitElement {
                     )}
                   </ul>
 
-                  <div class="tasks-title">Tasks on first board</div>
+                  <div class="tasks-title">
+                    Tasks on ${selectedBoard ? selectedBoard.name : "(no board selected)"}
+                  </div>
 
                   <div>
                     <input
@@ -166,7 +212,7 @@ export class DoBeeDoPanel extends LitElement {
                       }}
                     />
                     <button @click=${() => this._handleCreateTask()} ?disabled=${
-                      !this._newTaskTitle.trim() || this._loading
+                      !this._newTaskTitle.trim() || this._loading || !this._selectedBoardId
                     }>
                       Add task
                     </button>

@@ -23,6 +23,11 @@ export interface HassConnection {
   sendMessagePromise<T = any>(msg: Record<string, any>): Promise<T>;
 }
 
+export type DoBeeDoEventMessage = {
+  event_type: string;
+  payload: Record<string, any>;
+};
+
 export class DoBeeDoApiClient {
   private connection: HassConnection;
 
@@ -71,5 +76,41 @@ export class DoBeeDoApiClient {
     });
 
     return response.task;
+  }
+
+  public subscribeUpdates(
+    onEvent: (event: DoBeeDoEventMessage) => void,
+  ): () => void {
+    // We use the low-level connection API here because the HA
+    // connection helpers are not available in this standalone client.
+    // The connection will route incoming messages with
+    // `type: "dobeedo/event"` to the provided callback.
+
+    // Send the subscribe command; we intentionally ignore the
+    // promise resolution here because the connection will deliver
+    // events asynchronously.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.connection.sendMessagePromise({
+      type: "dobeedo/subscribe_updates",
+    });
+
+    const handler = (msg: any) => {
+      if (msg?.type === "dobeedo/event" && msg.event_type && msg.payload) {
+        onEvent({
+          event_type: msg.event_type,
+          payload: msg.payload,
+        });
+      }
+    };
+
+    // Home Assistant's connection attaches listeners via `subscribeMessage`.
+    // In this minimal client we assume `connection.subscribeMessage` exists;
+    // if not, this will be a no-op.
+    const anyConn = this.connection as any;
+    const unsubscribe = anyConn.subscribeMessage?.(handler) ?? (() => {});
+
+    return () => {
+      unsubscribe();
+    };
   }
 }

@@ -15,6 +15,7 @@ from .const import DOMAIN
 from .panel import async_register_panel
 from .api import async_register_api
 from .coordinator import DobeeDoManager
+from .services import async_register_services
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -49,6 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pass
 
     hass.data[DOMAIN][entry.entry_id] = {"manager": manager}
+
+    # Register services that expose DoBeeDo operations to automations.
+    async_register_services(hass)
 
     # Register the sidebar panel so users can access the DoBeeDo UI.
     await async_register_panel(hass)

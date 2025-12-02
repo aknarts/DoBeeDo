@@ -1,24 +1,25 @@
 """Tests for the DoBeeDo domain model and storage helpers.
 
-These tests intentionally avoid importing Home Assistant directly, but
-``custom_components.dobeedo`` itself depends on Home Assistant. To keep
-`pytest` runs working in a plain environment, the tests are skipped if
-Home Assistant is not installed.
+These tests exercise only the pure Python model and storage helpers and
+can run without a Home Assistant installation.
 """
 from __future__ import annotations
 
-import pytest
+import importlib
 
-homeassistant = pytest.importorskip("homeassistant")  # type: ignore[assignment]
+model = importlib.import_module("custom_components.dobeedo.model")
+storage = importlib.import_module("custom_components.dobeedo.storage")
 
-from custom_components.dobeedo.model import Board, Column, Task, ChecklistItem, EntityLink
-from custom_components.dobeedo.storage import (
-    deserialize_model,
-    serialize_model,
-)
+Board = getattr(model, "Board")
+Column = getattr(model, "Column")
+Task = getattr(model, "Task")
+ChecklistItem = getattr(model, "ChecklistItem")
+EntityLink = getattr(model, "EntityLink")
+serialize_model = getattr(storage, "serialize_model")
+deserialize_model = getattr(storage, "deserialize_model")
 
 
-async def test_board_roundtrip() -> None:
+def test_board_roundtrip() -> None:
     """Board should round-trip through to_dict/from_dict."""
 
     board = Board(id="b1", name="Board", description="Desc", column_ids=["c1", "c2"])
@@ -28,7 +29,7 @@ async def test_board_roundtrip() -> None:
     assert restored == board
 
 
-async def test_column_and_task_roundtrip() -> None:
+def test_column_and_task_roundtrip() -> None:
     """Column and Task should round-trip through to_dict/from_dict."""
 
     column = Column(id="c1", board_id="b1", name="Todo", order_index=0)
@@ -45,7 +46,7 @@ async def test_column_and_task_roundtrip() -> None:
     assert Task.from_dict(task.to_dict()) == task
 
 
-async def test_checklist_and_entity_link_roundtrip() -> None:
+def test_checklist_and_entity_link_roundtrip() -> None:
     """ChecklistItem and EntityLink should round-trip correctly."""
 
     item = ChecklistItem(id="i1", task_id="t1", label="Do thing", done=True)
@@ -55,16 +56,22 @@ async def test_checklist_and_entity_link_roundtrip() -> None:
     assert EntityLink.from_dict(link.to_dict()) == link
 
 
-async def test_serialize_and_deserialize_model() -> None:
+def test_serialize_and_deserialize_model() -> None:
     """serialize_model and deserialize_model are inverses for simple data."""
 
-    boards = [Board(id="b1", name="Board")]
+    boards = [Board(id="b1", name="Board")]  # column_ids defaults to None
     columns = [Column(id="c1", board_id="b1", name="Todo", order_index=0)]
     tasks = [Task(id="t1", board_id="b1", column_id="c1", title="Task")]
 
     data = serialize_model(boards, columns, tasks)
     restored_boards, restored_columns, restored_tasks = deserialize_model(data)
 
-    assert restored_boards == boards
+    assert len(restored_boards) == 1
+    restored = restored_boards[0]
+    assert restored.id == "b1"
+    assert restored.name == "Board"
+    # column_ids is normalised from None to [] by Board.to_dict/from_dict
+    assert restored.column_ids == []
+
     assert restored_columns == columns
     assert restored_tasks == tasks

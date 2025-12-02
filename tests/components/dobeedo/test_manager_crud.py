@@ -1,25 +1,46 @@
-"""Tests for the DobeeDoManager coordinator class."""
+"""Tests for the DobeeDoManager coordinator class.
+
+These tests use a tiny fake Home Assistant core object so they can run
+without the full Home Assistant test harness.
+"""
 from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Dict, List
+
+import importlib
 
 import pytest
 
-homeassistant = pytest.importorskip("homeassistant")  # noqa: F401
+coordinator = importlib.import_module("custom_components.dobeedo.coordinator")
+DobeeDoManager = getattr(coordinator, "DobeeDoManager")
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_capture_events
 
-from custom_components.dobeedo.coordinator import DobeeDoManager
+@dataclass
+class _FakeEvent:
+    event_type: str
+    data: Dict[str, Any]
+
+
+class _FakeBus:
+    def __init__(self) -> None:
+        self.events: List[_FakeEvent] = []
+
+    def async_fire(self, event_type: str, data: Dict[str, Any]) -> None:
+        self.events.append(_FakeEvent(event_type=event_type, data=data))
+
+
+class _FakeHass:
+    def __init__(self) -> None:
+        self.bus = _FakeBus()
 
 
 @pytest.mark.asyncio
-async def test_create_board_and_column_and_task_events(hass: HomeAssistant) -> None:
+async def test_create_board_and_column_and_task_events() -> None:
     """Creating entities via the manager should fire events and maintain ordering."""
 
-    manager = DobeeDoManager(hass)
-
-    # Capture all events to assert later.
-    board_events = async_capture_events(hass, "dobeedo_board_created")
-    task_events = async_capture_events(hass, "dobeedo_task_created")
+    hass = _FakeHass()
+    manager = DobeeDoManager(hass)  # type: ignore[arg-type]
 
     board = await manager.async_create_board("My Board")
     column = await manager.async_create_column(board.id, "Todo")
@@ -31,7 +52,9 @@ async def test_create_board_and_column_and_task_events(hass: HomeAssistant) -> N
     assert task1.id.startswith("task-")
     assert task2.sort_index == 1
 
-    # Ensure events were fired.
+    board_events = [e for e in hass.bus.events if e.event_type == "dobeedo_board_created"]
+    task_events = [e for e in hass.bus.events if e.event_type == "dobeedo_task_created"]
+
     assert len(board_events) == 1
     assert board_events[0].data["board"]["id"] == board.id
 
@@ -41,10 +64,11 @@ async def test_create_board_and_column_and_task_events(hass: HomeAssistant) -> N
 
 
 @pytest.mark.asyncio
-async def test_move_and_delete_task(hass: HomeAssistant) -> None:
+async def test_move_and_delete_task() -> None:
     """Tasks can be moved between columns and deleted."""
 
-    manager = DobeeDoManager(hass)
+    hass = _FakeHass()
+    manager = DobeeDoManager(hass)  # type: ignore[arg-type]
 
     board = await manager.async_create_board("Board")
     col_todo = await manager.async_create_column(board.id, "Todo")
@@ -52,17 +76,16 @@ async def test_move_and_delete_task(hass: HomeAssistant) -> None:
 
     task = await manager.async_create_task(board.id, col_todo.id, "Task")
 
-    move_events = async_capture_events(hass, "dobeedo_task_moved")
-    delete_events = async_capture_events(hass, "dobeedo_task_deleted")
-
     await manager.async_move_task(task.id, col_done.id)
     assert task.column_id == col_done.id
 
     await manager.async_delete_task(task.id)
+
+    move_events = [e for e in hass.bus.events if e.event_type == "dobeedo_task_moved"]
+    delete_events = [e for e in hass.bus.events if e.event_type == "dobeedo_task_deleted"]
 
     assert len(move_events) == 1
     assert move_events[0].data["task"]["id"] == task.id
 
     assert len(delete_events) == 1
     assert delete_events[0].data["task"]["id"] == task.id
-

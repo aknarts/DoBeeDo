@@ -1,157 +1,156 @@
 """Domain model definitions for the DoBeeDo integration.
-        )
-            relation=str(data.get("relation", "related")),
-            entity_id=str(data["entity_id"]),
-            task_id=str(data["task_id"]),
-            id=str(data["id"]),
-        return cls(
 
-        """Create an EntityLink from a dictionary."""
-    def from_dict(cls, data: Dict[str, Any]) -> "EntityLink":
-    @classmethod
-
-        return asdict(self)
-
-        """Serialize the entity link to a dictionary."""
-    def to_dict(self) -> Dict[str, Any]:
-
-    relation: str = "related"
-    entity_id: str
-    task_id: str
-    id: str
-
-    """
-    later phases; for now we just capture the relationship.
-    The precise semantics (e.g. auto-complete rules) will be defined in
-
-    """A link from a task to a Home Assistant entity.
-class EntityLink:
-@dataclass
-
-
-        )
-            done=bool(data.get("done", False)),
-            label=str(data["label"]),
-            task_id=str(data["task_id"]),
-            id=str(data["id"]),
-        return cls(
-
-        """Create a ChecklistItem from a dictionary."""
-    def from_dict(cls, data: Dict[str, Any]) -> "ChecklistItem":
-    @classmethod
-
-        return asdict(self)
-
-        """Serialize the checklist item to a dictionary."""
-    def to_dict(self) -> Dict[str, Any]:
-
-    done: bool = False
-    label: str
-    task_id: str
-    id: str
-
-    """
-    as later phases extend task details.
-    This is defined ahead of its first use to keep the model coherent
-
-    """A checklist item attached to a task.
-class ChecklistItem:
-@dataclass
-
-
-        )
-            sort_index=int(data.get("sort_index", 0)),
-            description=data.get("description"),
-            title=str(data["title"]),
-            column_id=str(data["column_id"]),
-            board_id=str(data["board_id"]),
-            id=str(data["id"]),
-        return cls(
-
-        """Create a Task from a dictionary."""
-    def from_dict(cls, data: Dict[str, Any]) -> "Task":
-    @classmethod
-
-        return asdict(self)
-
-        """Serialize the task to a dictionary."""
-    def to_dict(self) -> Dict[str, Any]:
-
-    sort_index: int = 0
-    description: Optional[str] = None
-    title: str
-    column_id: str
-    board_id: str
-    id: str
-
-    """A task card belonging to a column on a board."""
-class Task:
-@dataclass
-
-
-        )
-            order_index=int(data["order_index"]),
-            name=str(data["name"]),
-            board_id=str(data["board_id"]),
-            id=str(data["id"]),
-        return cls(
-
-        """Create a Column from a dictionary."""
-    def from_dict(cls, data: Dict[str, Any]) -> "Column":
-    @classmethod
-
-        return asdict(self)
-
-        """Serialize the column to a dictionary."""
-    def to_dict(self) -> Dict[str, Any]:
-
-    order_index: int
-    name: str
-    board_id: str
-    id: str
-
-    """A column within a board, ordered left-to-right by ``order_index``."""
-class Column:
-@dataclass
-
-
-        )
-            column_ids=list(data.get("column_ids", [])),
-            description=data.get("description"),
-            name=str(data["name"]),
-            id=str(data["id"]),
-        return cls(
-
-        """Create a Board from a dictionary."""
-    def from_dict(cls, data: Dict[str, Any]) -> "Board":
-    @classmethod
-
-        return data
-            data["column_ids"] = []
-        if data["column_ids"] is None:
-        # Normalise None lists to empty lists for storage/transport.
-        data = asdict(self)
-
-        """Serialize the board to a dictionary."""
-    def to_dict(self) -> Dict[str, Any]:
-
-    column_ids: List[str] | None = None
-    description: Optional[str] = None
-    name: str
-    id: str
-
-    """A kanban board containing ordered columns and tasks."""
-class Board:
-@dataclass
-
-
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, asdict
-
-from __future__ import annotations
-"""
-minimum needed for the backend MVP.
-integration. They are intentionally lightweight and focused on the
 These data structures represent the core entities managed by the
+integration. They are intentionally lightweight and focused on the
+minimum needed for the backend MVP.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
 
 
+@dataclass
+class Board:
+    """A kanban board containing ordered columns and tasks."""
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    column_ids: List[str] | None = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the board to a dictionary."""
+
+        data = asdict(self)
+        # Normalise None lists to empty lists for storage/transport.
+        if data["column_ids"] is None:
+            data["column_ids"] = []
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Board":
+        """Create a Board from a dictionary."""
+
+        return cls(
+            id=str(data["id"]),
+            name=str(data["name"]),
+            description=data.get("description"),
+            column_ids=list(data.get("column_ids", [])),
+        )
+
+
+@dataclass
+class Column:
+    """A column within a board, ordered left-to-right by ``order_index``."""
+
+    id: str
+    board_id: str
+    name: str
+    order_index: int
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the column to a dictionary."""
+
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Column":
+        """Create a Column from a dictionary."""
+
+        return cls(
+            id=str(data["id"]),
+            board_id=str(data["board_id"]),
+            name=str(data["name"]),
+            order_index=int(data["order_index"]),
+        )
+
+
+@dataclass
+class Task:
+    """A task card belonging to a column on a board."""
+
+    id: str
+    board_id: str
+    column_id: str
+    title: str
+    description: Optional[str] = None
+    sort_index: int = 0
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the task to a dictionary."""
+
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Task":
+        """Create a Task from a dictionary."""
+
+        return cls(
+            id=str(data["id"]),
+            board_id=str(data["board_id"]),
+            column_id=str(data["column_id"]),
+            title=str(data["title"]),
+            description=data.get("description"),
+            sort_index=int(data.get("sort_index", 0)),
+        )
+
+
+@dataclass
+class ChecklistItem:
+    """A checklist item attached to a task.
+
+    This is defined ahead of its first use to keep the model coherent
+    as later phases extend task details.
+    """
+
+    id: str
+    task_id: str
+    label: str
+    done: bool = False
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the checklist item to a dictionary."""
+
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ChecklistItem":
+        """Create a ChecklistItem from a dictionary."""
+
+        return cls(
+            id=str(data["id"]),
+            task_id=str(data["task_id"]),
+            label=str(data["label"]),
+            done=bool(data.get("done", False)),
+        )
+
+
+@dataclass
+class EntityLink:
+    """A link from a task to a Home Assistant entity.
+
+    The precise semantics (e.g. auto-complete rules) will be defined in
+    later phases; for now we just capture the relationship.
+    """
+
+    id: str
+    task_id: str
+    entity_id: str
+    relation: str = "related"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the entity link to a dictionary."""
+
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "EntityLink":
+        """Create an EntityLink from a dictionary."""
+
+        return cls(
+            id=str(data["id"]),
+            task_id=str(data["task_id"]),
+            entity_id=str(data["entity_id"]),
+            relation=str(data.get("relation", "related")),
+        )

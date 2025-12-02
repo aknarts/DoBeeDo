@@ -32,21 +32,21 @@ It’s organized into phases and concrete tasks that can be turned into GitHub i
 
 ### 1.1 Domain Model & Storage
 
-- [ ] Define core Python data structures in `model.py`:
-  - [ ] `Board`
-  - [ ] `Column`
-  - [ ] `Task`
-  - [ ] `ChecklistItem`
-  - [ ] `EntityLink`
-- [ ] Implement storage layer in `storage.py`:
-  - [ ] Use `homeassistant.helpers.storage.Store`.
-  - [ ] Define root storage schema with `schema_version`.
-  - [ ] Implement `async_load` / `async_save` and migration hooks.
-- [ ] Implement a central manager class (e.g., `DobeeDoManager`) in `coordinator.py`:
-  - [ ] Keep in-memory collections of boards and tasks.
-  - [ ] Provide async CRUD methods for boards, columns, and tasks.
-  - [ ] Handle ordering within boards/columns.
-  - [ ] Emit HA events on changes.
+- [x] Define core Python data structures in `model.py`:
+  - [x] `Board`
+  - [x] `Column`
+  - [x] `Task`
+  - [x] `ChecklistItem`
+  - [x] `EntityLink`
+- [x] Implement storage layer in `storage.py`:
+  - [x] Use `homeassistant.helpers.storage.Store`.
+  - [x] Define root storage schema with `schema_version`.
+  - [x] Implement `async_load` / `async_save` and migration hooks.
+- [x] Implement a central manager class (e.g., `DobeeDoManager`) in `coordinator.py`:
+  - [x] Keep in-memory collections of boards and tasks.
+  - [x] Provide async CRUD methods for boards, columns, and tasks.
+  - [x] Handle ordering within boards/columns.
+  - [x] Emit HA events on changes.
 
 ### 1.2 Integration Skeleton
 
@@ -65,19 +65,19 @@ It’s organized into phases and concrete tasks that can be turned into GitHub i
 
 ### 1.3 Services
 
-- [ ] Implement service registration and handlers in `services.py`:
+- [x] Implement service registration and handlers in `services.py`:
 
-  - [ ] `dobeedo.create_board`
-  - [ ] `dobeedo.update_board`
-  - [ ] `dobeedo.create_task`
-  - [ ] `dobeedo.update_task`
-  - [ ] `dobeedo.move_task`
-  - [ ] `dobeedo.delete_task`
+  - [x] `dobeedo.create_board`
+  - [x] `dobeedo.update_board`
+  - [x] `dobeedo.create_task`
+  - [x] `dobeedo.update_task`
+  - [x] `dobeedo.move_task`
+  - [x] `dobeedo.delete_task`
 
   For each service:
 
-  - [ ] Define `voluptuous` schemas.
-  - [ ] Wire handlers to `DobeeDoManager` methods.
+  - [x] Define `voluptuous` schemas.
+  - [x] Wire handlers to `DobeeDoManager` methods.
   - [ ] Add basic logging and error handling.
 
 ### 1.4 WebSocket API
@@ -85,16 +85,16 @@ It’s organized into phases and concrete tasks that can be turned into GitHub i
 - [x] Add a WebSocket API module in `api.py`:
   - [x] Register commands via `websocket_api.async_register_command`.
   - [x] Implement handler for:
-    - [x] `dobeedo/get_boards` (stub: returns a static example board).
-- [ ] Extend handlers for:
+    - [x] `dobeedo/get_boards` (now backed by `DobeeDoManager`).
+- [x] Extend handlers for:
   - [ ] `dobeedo/get_board`
-  - [ ] `dobeedo/get_tasks`
-  - [ ] `dobeedo/create_task`
-  - [ ] `dobeedo/update_task`
-  - [ ] `dobeedo/move_task`
-- [ ] Implement a `subscribe` command:
-  - [ ] `dobeedo/subscribe_updates`
-  - [ ] Forward relevant change events or minimal payload updates to clients.
+  - [x] `dobeedo/get_tasks`
+  - [x] `dobeedo/create_task`
+  - [x] `dobeedo/update_task`
+  - [x] `dobeedo/move_task`
+- [x] Implement a `subscribe` command:
+  - [x] `dobeedo/subscribe_updates`
+  - [x] Forward relevant change events or minimal payload updates to clients.
 
 ### 1.5 Tests (Backend MVP)
 

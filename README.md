@@ -231,6 +231,39 @@ Detailed technical planning lives in `docs/DEVELOPMENT_PLAN.md`. At a high level
 
 ---
 
+## Development: Python test environment
+
+This repository includes helper scripts to create and use an isolated
+Python environment for running tests without installing Home Assistant
+and other dependencies into your system Python.
+
+From the project root:
+
+```bash
+# One-time setup: create a local pyenv + virtualenv and install deps
+./scripts/setup_pyenv.sh
+
+# Run tests inside that environment
+./scripts/test_in_pyenv.sh
+```
+
+The setup script:
+
+- Bootstraps a local `pyenv` under `.pyenv` (if `pyenv` is not already
+  available on your PATH).
+- Installs a dedicated Python version for tests (currently `3.13.0`).
+- Creates a virtualenv at `.venv-test` and installs:
+  - `homeassistant` (so the integration and tests can import it).
+  - `pytest` and any test extras from `pyproject.toml`.
+
+The `test_in_pyenv.sh` wrapper activates `.venv-test` and then runs
+`pytest`, forwarding any extra arguments you pass through to pytest.
+
+This keeps your system Python clean while giving you a realistic test
+environment that includes the real Home Assistant package.
+
+---
+
 ## Contributing
 
 This project is in its early stages. Contributions are welcome once the basic scaffolding is in place. Planned contribution areas include:
