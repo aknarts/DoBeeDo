@@ -13,7 +13,7 @@ from .const import DOMAIN
 
 
 PANEL_TITLE = "DoBeeDo"
-PANEL_ICON = "mdi:view-kanban"
+PANEL_ICON = "mdi:checkbox-marked-circle-plus-outline"
 # HACS exposes files under custom_components/<domain>/www as
 # /hacsfiles/<domain>/... in the frontend. We ship the built panel bundle
 # as custom_components/dobeedo/www/dobee-do-panel.js and load it via this URL.
