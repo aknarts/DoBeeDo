@@ -98,6 +98,13 @@ export class DoBeeDoPanel extends LitElement {
             if (boardId && boardId === this._selectedBoardId) {
               void this._refreshTasksForSelectedBoard();
             }
+          } else if (evt.event_type.startsWith("column_")) {
+            const boardId = (evt.payload as any).column?.board_id;
+            // eslint-disable-next-line no-console
+            console.debug("DoBeeDo column event for board", boardId, "selected", this._selectedBoardId);
+            if (boardId && boardId === this._selectedBoardId) {
+              void this._refreshColumnsAndTasks();
+            }
           } else if (evt.event_type.startsWith("board_")) {
             void this._fetchBoards();
           }

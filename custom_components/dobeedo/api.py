@@ -19,6 +19,7 @@ from .const import (
     EVENT_TASK_DELETED,
     EVENT_TASK_MOVED,
     EVENT_TASK_UPDATED,
+    EVENT_COLUMN_CREATED,
 )
 from .coordinator import DobeeDoManager
 
@@ -287,6 +288,7 @@ async def websocket_subscribe_updates(
         EVENT_BOARD_CREATED: "board_created",
         EVENT_BOARD_UPDATED: "board_updated",
         EVENT_BOARD_DELETED: "board_deleted",
+        EVENT_COLUMN_CREATED: "column_created",
         EVENT_TASK_CREATED: "task_created",
         EVENT_TASK_UPDATED: "task_updated",
         EVENT_TASK_DELETED: "task_deleted",

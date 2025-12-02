@@ -20,6 +20,7 @@ from .const import (
     EVENT_TASK_DELETED,
     EVENT_TASK_MOVED,
     EVENT_TASK_UPDATED,
+    EVENT_COLUMN_CREATED,
 )
 from .model import Board, Column, Task
 
@@ -166,6 +167,9 @@ class DobeeDoManager:
         # Re-normalise order_index for all columns on the board so they
         # are contiguous after the insert.
         await self._reindex_columns(board_id)
+
+        # Fire a column-created event so frontends can react.
+        self._fire_event(EVENT_COLUMN_CREATED, {"column": column.to_dict()})
 
         return column
 

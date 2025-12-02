@@ -129,6 +129,23 @@ export class DoBeeDoApiClient {
       const unsubscribe = anyConn.subscribeEvents((msg: any) => {
         // eslint-disable-next-line no-console
         console.debug("DoBeeDo: raw WS message via subscribeEvents", msg);
+
+        // Shape 1: Home Assistant event-bus packet
+        if (typeof msg?.event_type === "string" && msg.data) {
+          const et: string = msg.event_type;
+          if (et.startsWith("dobeedo_")) {
+            // e.g. "dobeedo_task_created" -> "task_created"
+            const simplified = et.replace(/^dobeedo_/, "");
+            onEvent({
+              event_type: simplified,
+              payload: msg.data as Record<string, any>,
+              raw_type: et,
+            });
+          }
+          return;
+        }
+
+        // Shape 2: explicit dobeedo/event envelope (if ever routed here)
         if (msg?.type === "dobeedo/event" && msg.event_type && msg.payload) {
           onEvent({
             event_type: msg.event_type,
