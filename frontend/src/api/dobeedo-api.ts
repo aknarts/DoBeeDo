@@ -21,6 +21,8 @@ export interface DoBeeDoTaskSummary {
 
 export interface HassConnection {
   sendMessagePromise<T = any>(msg: Record<string, any>): Promise<T>;
+  // Allow access to the low-level subscription hook used by HA frontend
+  subscribeEvents?: (callback: (msg: any) => void) => () => void;
 }
 
 export type DoBeeDoEventMessage = {
@@ -83,9 +85,33 @@ export class DoBeeDoApiClient {
     onEvent: (event: DoBeeDoEventMessage) => void,
   ): () => void {
     const anyConn = this.connection as any;
+
+    // Prefer a generic subscribeEvents hook if available; otherwise, fall
+    // back to subscribeMessage if present.
+    if (anyConn.subscribeEvents) {
+      // eslint-disable-next-line no-console
+      console.debug("DoBeeDo: using connection.subscribeEvents for updates");
+      const unsubscribe = anyConn.subscribeEvents((msg: any) => {
+        // eslint-disable-next-line no-console
+        console.debug("DoBeeDo: raw WS message via subscribeEvents", msg);
+        if (msg?.type === "dobeedo/event" && msg.event_type && msg.payload) {
+          onEvent({
+            event_type: msg.event_type,
+            payload: msg.payload,
+            raw_type: msg.raw_type,
+          });
+        }
+      });
+      return () => {
+        // eslint-disable-next-line no-console
+        console.debug("DoBeeDo: unsubscribe from subscribeEvents");
+        unsubscribe();
+      };
+    }
+
     if (!anyConn.subscribeMessage) {
       // eslint-disable-next-line no-console
-      console.warn("DoBeeDo: connection.subscribeMessage is not available");
+      console.warn("DoBeeDo: connection.subscribeMessage/subscribeEvents not available");
       return () => {};
     }
 
