@@ -79,13 +79,16 @@ export class DoBeeDoPanel extends LitElement {
 
       if (!this._unsubscribeUpdates) {
         const api = new DoBeeDoApiClient(this.hass.connection);
+        // eslint-disable-next-line no-console
+        console.debug("DoBeeDo: registering subscribeUpdates");
         this._unsubscribeUpdates = api.subscribeUpdates((evt: DoBeeDoEventMessage) => {
-          // Temporary debug logging to verify events are received
           // eslint-disable-next-line no-console
-          console.debug("DoBeeDo event", evt);
+          console.debug("DoBeeDo event received in panel", evt);
 
           if (evt.event_type.startsWith("task_")) {
             const boardId = (evt.payload as any).task?.board_id;
+            // eslint-disable-next-line no-console
+            console.debug("DoBeeDo task event for board", boardId, "selected", this._selectedBoardId);
             if (boardId && boardId === this._selectedBoardId) {
               void this._refreshTasksForSelectedBoard();
             }
