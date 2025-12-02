@@ -40,6 +40,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
             "module_url": "/custom_components/dobeedo/www/dobee-do-panel.js",
             "embed_iframe": False,
             "trust_external": False,
+            "panel": "dobeedo-panel",
         },
         require_admin=False,
     )
