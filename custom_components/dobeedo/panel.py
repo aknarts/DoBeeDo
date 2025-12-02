@@ -4,9 +4,9 @@ This module is responsible for registering the custom DoBeeDo panel in the
 Home Assistant sidebar. The panel is implemented as a web component bundle
 built by the frontend project and served as a static asset.
 """
-import logging
-
 from __future__ import annotations
+
+import logging
 
 from homeassistant.components.frontend import async_register_built_in_panel
 from homeassistant.core import HomeAssistant
