@@ -38,10 +38,10 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
         config={
-            "module_url": "/local/dobeedo/dobee-do-panel.js",
+            "name": DOMAIN,
             "embed_iframe": False,
             "trust_external": False,
-            "panel": "dobeedo-panel",
+            "js_url": "/local/dobeedo/dobee-do-panel.js",
         },
         require_admin=False,
     )
