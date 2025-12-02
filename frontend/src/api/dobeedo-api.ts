@@ -82,18 +82,12 @@ export class DoBeeDoApiClient {
   public subscribeUpdates(
     onEvent: (event: DoBeeDoEventMessage) => void,
   ): () => void {
-    // We use the low-level connection API here because the HA
-    // connection helpers are not available in this standalone client.
-    // The connection will route incoming messages with
-    // `type: "dobeedo/event"` to the provided callback.
-
-    // Send the subscribe command; we intentionally ignore the
-    // promise resolution here because the connection will deliver
-    // events asynchronously.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.connection.sendMessagePromise({
-      type: "dobeedo/subscribe_updates",
-    });
+    const anyConn = this.connection as any;
+    if (!anyConn.subscribeMessage) {
+      // If the connection does not support subscribeMessage, we cannot
+      // receive pushed events; return a no-op unsubscribe.
+      return () => {};
+    }
 
     const handler = (msg: any) => {
       if (msg?.type === "dobeedo/event" && msg.event_type && msg.payload) {
@@ -105,11 +99,11 @@ export class DoBeeDoApiClient {
       }
     };
 
-    // Home Assistant's connection attaches listeners via `subscribeMessage`.
-    // In this minimal client we assume `connection.subscribeMessage` exists;
-    // if not, this will be a no-op.
-    const anyConn = this.connection as any;
-    const unsubscribe = anyConn.subscribeMessage?.(handler) ?? (() => {});
+    // Use Home Assistant's standard pattern: subscribeMessage both sends
+    // the subscribe command and routes matching responses to the handler.
+    const unsubscribe = anyConn.subscribeMessage(handler, {
+      type: "dobeedo/subscribe_updates",
+    });
 
     return () => {
       unsubscribe();
