@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .panel import async_register_panel
 from .api import async_register_api
+from .coordinator import DobeeDoManager
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -32,7 +33,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DoBeeDo from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
+
+    # Create the central manager for this config entry.
+    manager = DobeeDoManager(hass)
+
+    # Optionally seed a default board/column so the frontend has
+    # something to show on first load. Errors here should not block
+    # setup, hence the minimal try/except.
+    try:
+        board = await manager.async_create_board("My Board")
+        await manager.async_create_column(board.id, "To do")
+    except Exception:  # pragma: no cover - defensive, should not happen
+        # Log via Home Assistant's logger once available; for now we
+        # simply proceed with an empty manager.
+        pass
+
+    hass.data[DOMAIN][entry.entry_id] = {"manager": manager}
 
     # Register the sidebar panel so users can access the DoBeeDo UI.
     await async_register_panel(hass)

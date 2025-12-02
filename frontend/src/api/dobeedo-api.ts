@@ -10,6 +10,15 @@ export interface DoBeeDoBoardSummary {
   description?: string;
 }
 
+export interface DoBeeDoTaskSummary {
+  id: string;
+  board_id: string;
+  column_id: string;
+  title: string;
+  description?: string | null;
+  sort_index: number;
+}
+
 export interface HassConnection {
   sendMessagePromise<T = any>(msg: Record<string, any>): Promise<T>;
 }
@@ -33,5 +42,34 @@ export class DoBeeDoApiClient {
 
     return response.boards ?? [];
   }
-}
 
+  public async getTasks(boardId: string): Promise<DoBeeDoTaskSummary[]> {
+    const response = await this.connection.sendMessagePromise<{
+      tasks?: DoBeeDoTaskSummary[];
+    }>({
+      type: "dobeedo/get_tasks",
+      board_id: boardId,
+    });
+
+    return response.tasks ?? [];
+  }
+
+  public async createTask(
+    boardId: string,
+    columnId: string,
+    title: string,
+    description?: string,
+  ): Promise<DoBeeDoTaskSummary> {
+    const response = await this.connection.sendMessagePromise<{
+      task: DoBeeDoTaskSummary;
+    }>({
+      type: "dobeedo/create_task",
+      board_id: boardId,
+      column_id: columnId,
+      title,
+      description,
+    });
+
+    return response.task;
+  }
+}

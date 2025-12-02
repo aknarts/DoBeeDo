@@ -127,8 +127,9 @@ Under `tests/components/dobeedo/`:
 - [x] Add dependencies:
   - [x] `lit` for web components.
   - [x] TypeScript, Vite, Vitest as dev dependencies.
-- [x] Decide output paths:
-  - [x] Panel bundle: `custom_components/dobeedo/www/dobee-do-panel.js` via Vite build, served via `/hacsfiles/dobeedo/dobee-do-panel.js` when installed through HACS.
+- [x] Decide output paths and format:
+  - [x] Panel bundle: `custom_components/dobeedo/www/dobee-do-panel.js` built via Vite/Rollup.
+  - [x] Bundle format: single-file IIFE (no top-level `export`) so Home Assistant can execute it as a classic script when loaded via `_panel_custom`.
   - [ ] Card bundle(s): `custom_components/dobeedo/www/dobee-do-cards.js`.
 
 ### 2.2 Panel Registration
@@ -136,10 +137,10 @@ Under `tests/components/dobeedo/`:
 - [x] Implement `panel.py` in the backend:
   - [x] Register a sidebar panel via Home Assistant’s frontend API.
   - [x] Use an appropriate icon (e.g., `mdi:view-kanban`).
-  - [x] Load the panel JS via a `_panel_custom` entry using `js_url: /hacsfiles/dobeedo/dobee-do-panel.js`.
-- [ ] Refine static asset serving:
-  - [ ] Confirm HACS layout and ensure the JS bundle is included under `custom_components/dobeedo/www` in releases.
-  - [ ] Update docs and/or build pipeline accordingly.
+  - [x] Load the panel JS via a `_panel_custom` entry pointing at the integration’s static path for `dobee-do-panel.js`.
+- [x] Static asset serving:
+  - [x] Register a static path (and/or rely on HACS’ `/hacsfiles` mapping) so `custom_components/dobeedo/www/dobee-do-panel.js` is reachable to the browser without manual copies into `<config>/www`.
+  - [ ] Confirm final HACS layout and release process to ensure the JS bundle is always included under `custom_components/dobeedo/www` in published versions.
 
 ### 2.3 Panel Shell & Routing
 
@@ -274,7 +275,7 @@ These are areas to refine as implementation continues. Feel free to adjust and e
 3. **Per-user preferences storage**
    - Decide whether to use HA’s user storage (if available) or browser local storage for panel filters.
 4. **Static asset serving vs `/local` path**
-   - **Current status:** Panel registration uses `_panel_custom` with `js_url: /hacsfiles/dobeedo/dobee-do-panel.js`, and the frontend build writes to `custom_components/dobeedo/www/`. HACS will expose that directory under `/hacsfiles/dobeedo/`, so no manual copy into `<config>/www` is required when installed via HACS.
+   - **Current status:** The Vite build writes `dobee-do-panel.js` into `custom_components/dobeedo/www/` as an IIFE bundle. The backend registers the panel and exposes this directory via a static path (and `/hacsfiles` when installed through HACS), so the browser can load the bundle directly without any manual copy into `<config>/www`.
 
 ---
 
