@@ -275,6 +275,7 @@ These are areas to refine as implementation continues. Feel free to adjust and e
    - Decide whether to use HA’s user storage (if available) or browser local storage for panel filters.
 4. **Static asset serving vs `/local` path**
    - Finalize whether DoBeeDo should rely on `/local` for the panel bundle in production, or use an integration-local static path served from `custom_components/dobeedo/www`.
+   - **Current status:** Panel registration expects the panel bundle at `/local/dobeedo/dobee-do-panel.js`, which requires the file to exist in `<config>/www/dobeedo`. The frontend build writes to `custom_components/dobeedo/www/`, so packaging or installation steps must ensure the file is also available under `/config/www/dobeedo/`.
 
 ---
 
