@@ -81,7 +81,10 @@ export class DoBeeDoPanel extends LitElement {
         const api = new DoBeeDoApiClient(this.hass.connection);
         this._unsubscribeUpdates = api.subscribeUpdates((evt: DoBeeDoEventMessage) => {
           if (evt.event_type.startsWith("task_")) {
-            void this._refreshTasksForSelectedBoard();
+            const boardId = evt.payload.task?.board_id;
+            if (boardId && boardId === this._selectedBoardId) {
+              void this._refreshTasksForSelectedBoard();
+            }
           } else if (evt.event_type.startsWith("board_")) {
             void this._fetchBoards();
           }
@@ -149,9 +152,15 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     try {
-      await api.createTask(board.id, columnId, this._newTaskTitle.trim());
+      const newTask = await api.createTask(board.id, columnId, this._newTaskTitle.trim());
       this._newTaskTitle = "";
-      await this._refreshTasksForSelectedBoard();
+
+      // Optimistically update the task list if we are still on the same board.
+      if (board.id === this._selectedBoardId) {
+        this._tasks = [...this._tasks, newTask];
+      } else {
+        await this._refreshTasksForSelectedBoard();
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to create DoBeeDo task", err);

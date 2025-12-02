@@ -26,6 +26,7 @@ export interface HassConnection {
 export type DoBeeDoEventMessage = {
   event_type: string;
   payload: Record<string, any>;
+  raw_type?: string;
 };
 
 export class DoBeeDoApiClient {
@@ -99,6 +100,7 @@ export class DoBeeDoApiClient {
         onEvent({
           event_type: msg.event_type,
           payload: msg.payload,
+          raw_type: msg.raw_type,
         });
       }
     };
