@@ -22,8 +22,9 @@ async def async_register_panel(hass: HomeAssistant) -> None:
     The frontend build outputs a bundle named ``dobee-do-panel.js`` into the
     integration's ``www`` directory under ``custom_components/dobeedo/www``.
 
-    When installed via HACS or as a custom integration, Home Assistant serves
-    this file at ``/custom_components/dobeedo/www/dobee-do-panel.js``.
+    For Home Assistant to serve this as a frontend resource, the same file
+    should also be placed under the main config ``www/dobeedo`` directory,
+    where it is available at ``/local/dobeedo/dobee-do-panel.js``.
     """
 
     # Ensure the panel is only registered once.
@@ -37,7 +38,7 @@ async def async_register_panel(hass: HomeAssistant) -> None:
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
         config={
-            "module_url": "/custom_components/dobeedo/www/dobee-do-panel.js",
+            "module_url": "/local/dobeedo/dobee-do-panel.js",
             "embed_iframe": False,
             "trust_external": False,
             "panel": "dobeedo-panel",
