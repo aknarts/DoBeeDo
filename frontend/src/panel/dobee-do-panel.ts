@@ -382,9 +382,16 @@ export class DoBeeDoPanel extends LitElement {
                                 : html`<ul>
                                     ${tasksForColumn.map(
                                       (task) => html`<li class="task-item">
-                                        <span>${task.title}</span>
+                                        <div>
+                                          <div>${task.title}</div>
+                                          ${task.description
+                                            ? html`<div class="board-description">
+                                                ${task.description}
+                                              </div>`
+                                            : ""}
+                                        </div>
                                         <button @click=${() => this._handleEditTask(task)}>
-                                          Edit
+                                          Edit details
                                         </button>
                                         <button @click=${() => this._handleMoveTask(task)}>
                                           Move
