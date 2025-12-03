@@ -9,6 +9,9 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components import websocket_api
+from voluptuous import Any as VAny
+from voluptuous import Coerce
+from voluptuous import Optional
 
 from .const import (
     DOMAIN,
@@ -125,6 +128,8 @@ async def websocket_get_columns(
         "board_id": str,
         "column_id": str,
         "title": str,
+        Optional("description"): VAny(str, None),
+        Optional("sort_index"): Coerce(int),
         # Optional fields may be omitted.
     }
 )
@@ -162,6 +167,8 @@ async def websocket_create_task(
     {
         "type": f"{DOMAIN}/update_task",
         "task_id": str,
+        Optional("title"): str,
+        Optional("description"): VAny(str, None),
     }
 )
 @websocket_api.async_response

@@ -100,10 +100,10 @@ It’s organized into phases and concrete tasks that can be turned into GitHub i
 
 Under `tests/components/dobeedo/`:
 
-- [ ] Test model behavior:
-  - [ ] Create/update/delete boards.
-  - [ ] Add/move tasks between columns.
-- [ ] Test storage load/save and simple migration.
+- [x] Test model behavior:
+  - [x] Create/update/delete boards.
+  - [x] Add/move tasks between columns.
+- [x] Test storage load/save and simple migration.
 - [ ] Test services:
   - [ ] Successful calls and expected model changes.
   - [ ] Validation errors for bad input.
@@ -170,21 +170,25 @@ Under `tests/components/dobeedo/`:
   - [x] Wrap HA’s WebSocket connection for DoBeeDo commands.
   - [x] Provide a typed method for:
     - [x] Fetching boards (`getBoards`) matching the stubbed backend API.
-- [ ] Extend the client as backend commands are added:
-  - [ ] `getBoard`
-  - [ ] `getTasksForBoard`
-  - [ ] `createTask`
-  - [ ] `updateTask`
-  - [ ] `moveTask`
+- [x] Extend the client as backend commands are added:
+  - [x] `getTasksForBoard`
+  - [x] `createTask`
+  - [x] `updateTask`
+  - [x] `moveTask`
+  - [x] `getColumns`
+  - [x] `createColumn`
 - [x] Integrate the client into the panel:
   - [x] Use `DoBeeDoApiClient` inside `dobeedo-panel` to load boards on startup.
   - [x] Render the list of boards in the panel UI.
+  - [x] Render columns and tasks for the selected board.
+  - [x] Allow creating columns and tasks (with optional description) from the panel.
+  - [x] Allow updating task title/description and moving tasks between columns.
 
 ### 2.6 Tests (Frontend MVP)
 
-- [ ] Setup Jest/Vitest config for running unit tests (Vitest is already a dependency).
-- [ ] Add minimal tests for:
-  - [ ] API client (`getBoards` happy path, error handling when response is malformed).
+- [x] Setup Jest/Vitest config for running unit tests (Vitest is already a dependency).
+- [x] Add minimal tests for:
+  - [x] API client (`getBoards` happy path, `updateTask` and `moveTask` payloads).
   - [ ] `dobeedo-panel` basic rendering (once it consumes real data).
   - [ ] Future components (`board-view`, `task-card`) as they are introduced.
 
