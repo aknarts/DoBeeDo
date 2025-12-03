@@ -226,6 +226,78 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _handleEditTask(task: DoBeeDoTaskSummary): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    const newTitle = window.prompt("Edit task title", task.title);
+    if (newTitle === null) {
+      return;
+    }
+
+    const trimmedTitle = newTitle.trim();
+    if (!trimmedTitle) {
+      return;
+    }
+
+    const newDescription = window.prompt(
+      "Edit task description (leave empty to clear)",
+      task.description ?? "",
+    );
+
+    const trimmedDescription = newDescription !== null ? newDescription.trim() : task.description ?? null;
+
+    const updates: { title?: string; description?: string | null } = {};
+    if (trimmedTitle !== task.title) {
+      updates.title = trimmedTitle;
+    }
+    if (trimmedDescription !== (task.description ?? null)) {
+      updates.description = trimmedDescription === "" ? null : trimmedDescription;
+    }
+
+    if (!updates.title && updates.description === undefined) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      const updated = await api.updateTask(task.id, updates);
+      this._tasks = this._tasks.map((t) => (t.id === updated.id ? updated : t));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to update DoBeeDo task", err);
+    }
+  }
+
+  private async _handleMoveTask(task: DoBeeDoTaskSummary): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    if (this._columns.length === 0) {
+      return;
+    }
+
+    const targetColumnId = window.prompt(
+      "Move task to column ID (use one of: " + this._columns.map((c) => c.id).join(", ") + ")",
+      task.column_id,
+    );
+
+    if (!targetColumnId) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      const moved = await api.moveTask(task.id, targetColumnId || task.column_id);
+      this._tasks = this._tasks.map((t) => (t.id === moved.id ? moved : t));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to move DoBeeDo task", err);
+    }
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._unsubscribeUpdates) {
@@ -309,7 +381,15 @@ export class DoBeeDoPanel extends LitElement {
                                 ? html`<p>No tasks in this column.</p>`
                                 : html`<ul>
                                     ${tasksForColumn.map(
-                                      (task) => html`<li class="task-item">${task.title}</li>`,
+                                      (task) => html`<li class="task-item">
+                                        <span>${task.title}</span>
+                                        <button @click=${() => this._handleEditTask(task)}>
+                                          Edit
+                                        </button>
+                                        <button @click=${() => this._handleMoveTask(task)}>
+                                          Move
+                                        </button>
+                                      </li>`,
                                     )}
                                   </ul>`}
                             </div>

@@ -116,6 +116,51 @@ export class DoBeeDoApiClient {
     return response.task;
   }
 
+  public async updateTask(
+    taskId: string,
+    updates: { title?: string; description?: string | null },
+  ): Promise<DoBeeDoTaskSummary> {
+    const payload: Record<string, any> = {
+      type: "dobeedo/update_task",
+      task_id: taskId,
+    };
+
+    if (updates.title !== undefined) {
+      payload.title = updates.title;
+    }
+    if (updates.description !== undefined) {
+      payload.description = updates.description;
+    }
+
+    const response = await this.connection.sendMessagePromise<{
+      task: DoBeeDoTaskSummary;
+    }>(payload);
+
+    return response.task;
+  }
+
+  public async moveTask(
+    taskId: string,
+    targetColumnId: string,
+    targetSortIndex?: number,
+  ): Promise<DoBeeDoTaskSummary> {
+    const payload: Record<string, any> = {
+      type: "dobeedo/move_task",
+      task_id: taskId,
+      target_column_id: targetColumnId,
+    };
+
+    if (targetSortIndex !== undefined) {
+      payload.target_sort_index = targetSortIndex;
+    }
+
+    const response = await this.connection.sendMessagePromise<{
+      task: DoBeeDoTaskSummary;
+    }>(payload);
+
+    return response.task;
+  }
+
   public subscribeUpdates(
     onEvent: (event: DoBeeDoEventMessage) => void,
   ): () => void {
