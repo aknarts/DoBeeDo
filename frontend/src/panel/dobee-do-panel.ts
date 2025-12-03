@@ -237,6 +237,14 @@ export class DoBeeDoPanel extends LitElement {
   protected render(): TemplateResult {
     const selectedBoard = this._boards.find((b) => b.id === this._selectedBoardId) ?? null;
 
+    // eslint-disable-next-line no-console
+    console.debug("DoBeeDo render", {
+      boards: this._boards,
+      selectedBoardId: this._selectedBoardId,
+      columns: this._columns,
+      selectedColumnId: this._selectedColumnId,
+    });
+
     return html`
       <h1>DoBeeDo</h1>
       ${this._loading
@@ -309,7 +317,8 @@ export class DoBeeDoPanel extends LitElement {
                         })}
                   </div>
 
-                  <div style="margin-top: 16px; display: flex; gap: 8px; align-items: center;">
+                  <div style="margin-top: 16px; display: flex; gap: 8px; align-items: center; border: 1px dashed red; padding: 4px;">
+                    <span>Column selector:</span>
                     <input
                       type="text"
                       .value=${this._newTaskTitle}
