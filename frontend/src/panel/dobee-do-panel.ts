@@ -30,6 +30,9 @@ export class DoBeeDoPanel extends LitElement {
   private _newTaskTitle = "";
 
   @state()
+  private _newTaskDescription = "";
+
+  @state()
   private _newColumnName = "";
 
   @state()
@@ -194,8 +197,14 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     try {
-      const newTask = await api.createTask(board.id, columnId, this._newTaskTitle.trim());
+      const newTask = await api.createTask(
+        board.id,
+        columnId,
+        this._newTaskTitle.trim(),
+        this._newTaskDescription.trim() || undefined,
+      );
       this._newTaskTitle = "";
+      this._newTaskDescription = "";
 
       if (board.id === this._selectedBoardId) {
         this._tasks = [...this._tasks, newTask];
@@ -242,18 +251,21 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     const newDescription = window.prompt(
-      "Edit task description (leave empty to clear)",
+      "Edit task description (leave empty to clear; Cancel keeps current description)",
       task.description ?? "",
     );
 
-    const trimmedDescription = newDescription !== null ? newDescription.trim() : task.description ?? null;
-
     const updates: { title?: string; description?: string | null } = {};
+
     if (trimmedTitle !== task.title) {
       updates.title = trimmedTitle;
     }
-    if (trimmedDescription !== (task.description ?? null)) {
-      updates.description = trimmedDescription === "" ? null : trimmedDescription;
+
+    if (newDescription !== null) {
+      const trimmedDescription = newDescription.trim();
+      if (trimmedDescription !== (task.description ?? "")) {
+        updates.description = trimmedDescription === "" ? null : trimmedDescription;
+      }
     }
 
     if (!updates.title && updates.description === undefined) {
@@ -404,41 +416,52 @@ export class DoBeeDoPanel extends LitElement {
                         })}
                   </div>
 
-                  <div style="margin-top: 16px; display: flex; gap: 8px; align-items: center; border: 1px dashed red; padding: 4px;">
-                    <span>Column selector:</span>
-                    <input
-                      type="text"
-                      .value=${this._newTaskTitle}
-                      placeholder="New task title"
-                      @input=${(ev: Event) => {
-                        const target = ev.target as HTMLInputElement;
-                        this._newTaskTitle = target.value;
-                      }}
-                    />
+                  <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px; border: 1px dashed red; padding: 4px;">
+                    <span>New task:</span>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                      <input
+                        type="text"
+                        .value=${this._newTaskTitle}
+                        placeholder="New task title"
+                        @input=${(ev: Event) => {
+                          const target = ev.target as HTMLInputElement;
+                          this._newTaskTitle = target.value;
+                        }}
+                      />
+                      <input
+                        type="text"
+                        .value=${this._newTaskDescription}
+                        placeholder="New task description (optional)"
+                        @input=${(ev: Event) => {
+                          const target = ev.target as HTMLInputElement;
+                          this._newTaskDescription = target.value;
+                        }}
+                      />
 
-                    <select
-                      .value=${this._selectedColumnId ?? ""}
-                      @change=${(ev: Event) => {
-                        const target = ev.target as HTMLSelectElement;
-                        this._selectedColumnId = target.value || null;
-                      }}
-                    >
-                      ${this._columns.map(
-                        (col) => html`<option value=${col.id}>${col.name}</option>`,
-                      )}
-                    </select>
+                      <select
+                        .value=${this._selectedColumnId ?? ""}
+                        @change=${(ev: Event) => {
+                          const target = ev.target as HTMLSelectElement;
+                          this._selectedColumnId = target.value || null;
+                        }}
+                      >
+                        ${this._columns.map(
+                          (col) => html`<option value=${col.id}>${col.name}</option>`,
+                        )}
+                      </select>
 
-                    <button
-                      @click=${() => this._handleCreateTask()}
-                      ?disabled=${
-                        !this._newTaskTitle.trim() ||
-                        this._loading ||
-                        !this._selectedBoardId ||
-                        !this._selectedColumnId
-                      }
-                    >
-                      Add task
-                    </button>
+                      <button
+                        @click=${() => this._handleCreateTask()}
+                        ?disabled=${
+                          !this._newTaskTitle.trim() ||
+                          this._loading ||
+                          !this._selectedBoardId ||
+                          !this._selectedColumnId
+                        }
+                      >
+                        Add task
+                      </button>
+                    </div>
                   </div>
                 `}
           `}
