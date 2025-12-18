@@ -416,7 +416,6 @@ export class DoBeeDoPanel extends LitElement {
         background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.15);
         box-shadow: 0 0 30px rgba(var(--rgb-primary-color, 33, 150, 243), 0.5),
                     0 0 0 4px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
-        transform: scale(1.02);
         transition: all 0.2s ease;
       }
 
@@ -1184,26 +1183,26 @@ export class DoBeeDoPanel extends LitElement {
 
     let dropIndex = taskElements.length;
 
-    // Use hysteresis to prevent rapid switching at boundaries
-    const HYSTERESIS = 0.15; // 15% hysteresis zone on each side of center
+    // Use larger hysteresis to prevent rapid switching at boundaries
+    const HYSTERESIS = 0.30; // 30% hysteresis zone on each side of center (60% total sticky zone)
 
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
       const taskTop = rect.top;
       const taskBottom = rect.bottom;
       const taskHeight = taskBottom - taskTop;
-      const taskMiddle = taskTop + taskHeight / 2;
 
-      // Define hysteresis boundaries
+      // Define hysteresis boundaries (30% from each edge)
       const upperBoundary = taskTop + taskHeight * (0.5 - HYSTERESIS);
       const lowerBoundary = taskTop + taskHeight * (0.5 + HYSTERESIS);
 
       // Check if we're currently at position i or i+1 for this task
       const currentIndex = this._dropIndicatorPosition?.index;
-      const isCurrentlyBefore = currentIndex === i;
-      const isCurrentlyAfter = currentIndex === i + 1;
+      const currentColumnId = this._dropIndicatorPosition?.columnId;
+      const isCurrentlyBefore = currentColumnId === columnId && currentIndex === i;
+      const isCurrentlyAfter = currentColumnId === columnId && currentIndex === i + 1;
 
-      // If we're in the hysteresis zone, keep the current position
+      // If we're in the hysteresis zone (middle 60% of the task), keep the current position
       if (touchY >= upperBoundary && touchY < lowerBoundary) {
         if (isCurrentlyBefore) {
           dropIndex = i;
@@ -1212,22 +1211,21 @@ export class DoBeeDoPanel extends LitElement {
           dropIndex = i + 1;
           break;
         }
-        // If neither, default to the closer one
-        if (touchY < taskMiddle) {
-          dropIndex = i;
-        } else {
-          dropIndex = i + 1;
+        // First time in this zone - don't switch, use the previous position
+        // If no previous position, default to end
+        if (currentIndex !== undefined && currentColumnId === columnId) {
+          dropIndex = currentIndex;
         }
         break;
       }
 
-      // If touch is clearly in the top zone (above hysteresis), drop before
+      // If touch is clearly in the top zone (top 20% of task), drop before
       if (touchY >= taskTop && touchY < upperBoundary) {
         dropIndex = i;
         break;
       }
 
-      // If touch is clearly in the bottom zone (below hysteresis), drop after
+      // If touch is clearly in the bottom zone (bottom 20% of task), drop after
       if (touchY >= lowerBoundary && touchY < taskBottom) {
         dropIndex = i + 1;
         break;
@@ -1265,26 +1263,26 @@ export class DoBeeDoPanel extends LitElement {
     let dropIndex = taskElements.length; // Default to end (after all tasks)
 
     // Find the insertion point based on mouse position
-    // Use hysteresis to prevent rapid switching at boundaries
-    const HYSTERESIS = 0.15; // 15% hysteresis zone on each side of center
+    // Use larger hysteresis to prevent rapid switching at boundaries
+    const HYSTERESIS = 0.30; // 30% hysteresis zone on each side of center (60% total sticky zone)
 
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
       const taskTop = rect.top;
       const taskBottom = rect.bottom;
       const taskHeight = taskBottom - taskTop;
-      const taskMiddle = taskTop + taskHeight / 2;
 
-      // Define hysteresis boundaries
+      // Define hysteresis boundaries (30% from each edge)
       const upperBoundary = taskTop + taskHeight * (0.5 - HYSTERESIS);
       const lowerBoundary = taskTop + taskHeight * (0.5 + HYSTERESIS);
 
       // Check if we're currently at position i or i+1 for this task
       const currentIndex = this._dropIndicatorPosition?.index;
-      const isCurrentlyBefore = currentIndex === i;
-      const isCurrentlyAfter = currentIndex === i + 1;
+      const currentColumnId = this._dropIndicatorPosition?.columnId;
+      const isCurrentlyBefore = currentColumnId === columnId && currentIndex === i;
+      const isCurrentlyAfter = currentColumnId === columnId && currentIndex === i + 1;
 
-      // If we're in the hysteresis zone, keep the current position
+      // If we're in the hysteresis zone (middle 60% of the task), keep the current position
       if (mouseY >= upperBoundary && mouseY < lowerBoundary) {
         if (isCurrentlyBefore) {
           dropIndex = i;
@@ -1293,22 +1291,21 @@ export class DoBeeDoPanel extends LitElement {
           dropIndex = i + 1;
           break;
         }
-        // If neither, default to the closer one
-        if (mouseY < taskMiddle) {
-          dropIndex = i;
-        } else {
-          dropIndex = i + 1;
+        // First time in this zone - don't switch, use the previous position
+        // If no previous position, default to end
+        if (currentIndex !== undefined && currentColumnId === columnId) {
+          dropIndex = currentIndex;
         }
         break;
       }
 
-      // If mouse is clearly in the top zone (above hysteresis), drop before
+      // If mouse is clearly in the top zone (top 20% of task), drop before
       if (mouseY >= taskTop && mouseY < upperBoundary) {
         dropIndex = i;
         break;
       }
 
-      // If mouse is clearly in the bottom zone (below hysteresis), drop after
+      // If mouse is clearly in the bottom zone (bottom 20% of task), drop after
       if (mouseY >= lowerBoundary && mouseY < taskBottom) {
         dropIndex = i + 1;
         break;
