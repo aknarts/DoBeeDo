@@ -1107,53 +1107,17 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    let dropIndex = taskElements.length;
-
-    // Use larger hysteresis to prevent rapid switching at boundaries
-    const HYSTERESIS = 0.30; // 30% hysteresis zone on each side of center (60% total sticky zone)
+    // Calculate drop zones based on midpoints between tasks (covers gaps)
+    // Each task's "center line" divides the drop zone between before/after
+    let dropIndex = taskElements.length; // Default to end
 
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
-      const taskTop = rect.top;
-      const taskBottom = rect.bottom;
-      const taskHeight = taskBottom - taskTop;
+      const taskMiddle = rect.top + rect.height / 2;
 
-      // Define hysteresis boundaries (30% from each edge)
-      const upperBoundary = taskTop + taskHeight * (0.5 - HYSTERESIS);
-      const lowerBoundary = taskTop + taskHeight * (0.5 + HYSTERESIS);
-
-      // Check if we're currently at position i or i+1 for this task
-      const currentIndex = this._dropIndicatorPosition?.index;
-      const currentColumnId = this._dropIndicatorPosition?.columnId;
-      const isCurrentlyBefore = currentColumnId === columnId && currentIndex === i;
-      const isCurrentlyAfter = currentColumnId === columnId && currentIndex === i + 1;
-
-      // If we're in the hysteresis zone (middle 60% of the task), keep the current position
-      if (touchY >= upperBoundary && touchY < lowerBoundary) {
-        if (isCurrentlyBefore) {
-          dropIndex = i;
-          break;
-        } else if (isCurrentlyAfter) {
-          dropIndex = i + 1;
-          break;
-        }
-        // First time in this zone - don't switch, use the previous position
-        // If no previous position, default to end
-        if (currentIndex !== undefined && currentColumnId === columnId) {
-          dropIndex = currentIndex;
-        }
-        break;
-      }
-
-      // If touch is clearly in the top zone (top 20% of task), drop before
-      if (touchY >= taskTop && touchY < upperBoundary) {
+      // For each task, if touch is above its middle, drop before it
+      if (touchY < taskMiddle) {
         dropIndex = i;
-        break;
-      }
-
-      // If touch is clearly in the bottom zone (bottom 20% of task), drop after
-      if (touchY >= lowerBoundary && touchY < taskBottom) {
-        dropIndex = i + 1;
         break;
       }
     }
@@ -1186,54 +1150,17 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    let dropIndex = taskElements.length; // Default to end (after all tasks)
-
-    // Find the insertion point based on mouse position
-    // Use larger hysteresis to prevent rapid switching at boundaries
-    const HYSTERESIS = 0.30; // 30% hysteresis zone on each side of center (60% total sticky zone)
+    // Calculate drop zones based on midpoints between tasks (covers gaps)
+    // Each task's "center line" divides the drop zone between before/after
+    let dropIndex = taskElements.length; // Default to end
 
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
-      const taskTop = rect.top;
-      const taskBottom = rect.bottom;
-      const taskHeight = taskBottom - taskTop;
+      const taskMiddle = rect.top + rect.height / 2;
 
-      // Define hysteresis boundaries (30% from each edge)
-      const upperBoundary = taskTop + taskHeight * (0.5 - HYSTERESIS);
-      const lowerBoundary = taskTop + taskHeight * (0.5 + HYSTERESIS);
-
-      // Check if we're currently at position i or i+1 for this task
-      const currentIndex = this._dropIndicatorPosition?.index;
-      const currentColumnId = this._dropIndicatorPosition?.columnId;
-      const isCurrentlyBefore = currentColumnId === columnId && currentIndex === i;
-      const isCurrentlyAfter = currentColumnId === columnId && currentIndex === i + 1;
-
-      // If we're in the hysteresis zone (middle 60% of the task), keep the current position
-      if (mouseY >= upperBoundary && mouseY < lowerBoundary) {
-        if (isCurrentlyBefore) {
-          dropIndex = i;
-          break;
-        } else if (isCurrentlyAfter) {
-          dropIndex = i + 1;
-          break;
-        }
-        // First time in this zone - don't switch, use the previous position
-        // If no previous position, default to end
-        if (currentIndex !== undefined && currentColumnId === columnId) {
-          dropIndex = currentIndex;
-        }
-        break;
-      }
-
-      // If mouse is clearly in the top zone (top 20% of task), drop before
-      if (mouseY >= taskTop && mouseY < upperBoundary) {
+      // For each task, if mouse is above its middle, drop before it
+      if (mouseY < taskMiddle) {
         dropIndex = i;
-        break;
-      }
-
-      // If mouse is clearly in the bottom zone (bottom 20% of task), drop after
-      if (mouseY >= lowerBoundary && mouseY < taskBottom) {
-        dropIndex = i + 1;
         break;
       }
     }
