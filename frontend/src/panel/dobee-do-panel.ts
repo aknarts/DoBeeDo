@@ -398,9 +398,10 @@ export class DoBeeDoPanel extends LitElement {
       }
 
       .task-card.dragging {
-        opacity: 0.5;
+        opacity: 0.3;
         cursor: grabbing;
         transform: rotate(2deg);
+        pointer-events: none;
       }
 
       .column.drag-active {
@@ -427,81 +428,33 @@ export class DoBeeDoPanel extends LitElement {
         box-shadow: inset 0 0 20px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
       }
 
-      /* Drop indicator - more prominent */
-      .drop-indicator {
-        height: 4px;
-        background: var(--primary-color);
-        margin: 8px 0;
-        border-radius: 3px;
-        box-shadow: 0 0 12px var(--primary-color),
-                    0 0 4px var(--primary-color);
-        position: relative;
-        z-index: 10;
-        animation: pulse-indicator 1s ease-in-out infinite;
+      /* Drop position indicators - simple border highlights */
+      .task-card.drop-target-before {
+        border-top: 4px solid var(--primary-color);
+        box-shadow: 0 -4px 8px rgba(var(--rgb-primary-color, 33, 150, 243), 0.4),
+                    0 1px 3px rgba(0, 0, 0, 0.12);
       }
 
-      @keyframes pulse-indicator {
-        0%, 100% {
-          opacity: 1;
-          box-shadow: 0 0 12px var(--primary-color), 0 0 4px var(--primary-color);
-        }
-        50% {
-          opacity: 0.7;
-          box-shadow: 0 0 20px var(--primary-color), 0 0 8px var(--primary-color);
-        }
+      .task-card.drop-target-after {
+        border-bottom: 4px solid var(--primary-color);
+        box-shadow: 0 4px 8px rgba(var(--rgb-primary-color, 33, 150, 243), 0.4),
+                    0 1px 3px rgba(0, 0, 0, 0.12);
       }
 
-      .drop-indicator::before {
-        content: "";
-        position: absolute;
-        left: -6px;
-        top: -4px;
-        width: 12px;
-        height: 12px;
-        background: var(--primary-color);
-        border-radius: 50%;
-        box-shadow: 0 0 8px var(--primary-color);
+      /* Empty list drop indicator */
+      .tasks-list.drop-target-empty {
+        border: 3px dashed var(--primary-color);
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.1);
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-      .drop-indicator::after {
-        content: "";
-        position: absolute;
-        right: -6px;
-        top: -4px;
-        width: 12px;
-        height: 12px;
-        background: var(--primary-color);
-        border-radius: 50%;
-        box-shadow: 0 0 8px var(--primary-color);
-      }
-
-      /* Drop preview - ghost of the task */
-      .drop-preview {
-        background: var(--card-background-color);
-        border: 2px dashed var(--primary-color);
-        border-left: 4px solid var(--primary-color);
-        border-radius: 8px;
-        padding: 12px;
-        margin: 8px 0;
-        opacity: 0.6;
-        box-shadow: 0 4px 16px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
-        animation: fade-in 0.2s ease;
-      }
-
-      @keyframes fade-in {
-        from {
-          opacity: 0;
-          transform: scale(0.95);
-        }
-        to {
-          opacity: 0.6;
-          transform: scale(1);
-        }
-      }
-
-      .drop-preview-title {
+      .tasks-list.drop-target-empty::after {
+        content: "Drop here";
+        color: var(--primary-color);
         font-weight: 500;
-        color: var(--primary-text-color);
         opacity: 0.7;
       }
 
@@ -1174,7 +1127,7 @@ export class DoBeeDoPanel extends LitElement {
     const tasksListEl = columnEl.querySelector('.tasks-list');
     if (!tasksListEl) return;
 
-    const taskElements = Array.from(tasksListEl.querySelectorAll('.task-card:not(.dragging):not(.drop-preview)'));
+    const taskElements = Array.from(tasksListEl.querySelectorAll('.task-card:not(.dragging)'));
 
     if (taskElements.length === 0) {
       this._dropIndicatorPosition = { columnId, index: 0 };
@@ -1251,7 +1204,7 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     const tasksListEl = ev.currentTarget as HTMLElement;
-    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging):not(.drop-preview)"));
+    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
     const mouseY = ev.clientY;
 
     // If there are no tasks, drop at position 0
@@ -1797,34 +1750,33 @@ export class DoBeeDoPanel extends LitElement {
           </div>
         </div>
         <div
-          class="tasks-list ${isDragOver ? "drag-over" : ""}"
+          class="tasks-list ${isDragOver ? "drag-over" : ""} ${
+            tasksForColumn.length === 0 &&
+            this._dropIndicatorPosition?.columnId === column.id
+              ? "drop-target-empty"
+              : ""
+          }"
           @dragover=${(ev: DragEvent) => this._handleDragOverTasksList(column.id, ev)}
           @drop=${(ev: DragEvent) => this._handleDrop(column.id, ev)}
         >
           ${tasksForColumn.length === 0
             ? html`
-                ${this._dropIndicatorPosition?.columnId === column.id &&
-                this._dropIndicatorPosition?.index === 0
-                  ? this._renderDropPreview()
-                  : ""}
                 <div class="empty-state" style="padding: 16px; font-size: 13px;">
                   No tasks yet
                 </div>
               `
             : html`
                 ${tasksForColumn.map((task, index) => {
-                  return html`
-                    ${this._dropIndicatorPosition?.columnId === column.id &&
-                    this._dropIndicatorPosition?.index === index
-                      ? this._renderDropPreview()
-                      : ""}
-                    ${this._renderTask(task)}
-                  `;
+                  // Determine if this task should show drop indicators
+                  const shouldShowDropBefore =
+                    this._dropIndicatorPosition?.columnId === column.id &&
+                    this._dropIndicatorPosition?.index === index;
+                  const shouldShowDropAfter =
+                    this._dropIndicatorPosition?.columnId === column.id &&
+                    this._dropIndicatorPosition?.index === index + 1;
+
+                  return this._renderTask(task, shouldShowDropBefore, shouldShowDropAfter);
                 })}
-                ${this._dropIndicatorPosition?.columnId === column.id &&
-                this._dropIndicatorPosition?.index === tasksForColumn.length
-                  ? this._renderDropPreview()
-                  : ""}
               `}
         </div>
         <div class="add-task-form">
@@ -1947,7 +1899,11 @@ export class DoBeeDoPanel extends LitElement {
     `;
   }
 
-  private _renderTask(task: DoBeeDoTaskSummary): TemplateResult {
+  private _renderTask(
+    task: DoBeeDoTaskSummary,
+    showDropBefore: boolean = false,
+    showDropAfter: boolean = false
+  ): TemplateResult {
     const isEditing = this._editingTaskId === task.id;
 
     if (isEditing) {
@@ -2021,7 +1977,9 @@ export class DoBeeDoPanel extends LitElement {
 
     return html`
       <div
-        class="task-card ${isDragging ? "dragging" : ""} ${isOverdue ? "overdue" : ""}"
+        class="task-card ${isDragging ? "dragging" : ""} ${isOverdue ? "overdue" : ""} ${
+          showDropBefore ? "drop-target-before" : ""
+        } ${showDropAfter ? "drop-target-after" : ""}"
         draggable="true"
         @dragstart=${(ev: DragEvent) => this._handleDragStart(task, ev)}
         @dragend=${this._handleDragEnd}
@@ -2052,25 +2010,6 @@ export class DoBeeDoPanel extends LitElement {
     `;
   }
 
-  private _renderDropPreview(): TemplateResult {
-    if (!this._draggingTaskId) {
-      return html``;
-    }
-
-    const draggingTask = this._tasks.find((t) => t.id === this._draggingTaskId);
-    if (!draggingTask) {
-      return html``;
-    }
-
-    return html`
-      <div class="drop-preview">
-        <div class="drop-preview-title">${draggingTask.title}</div>
-        ${draggingTask.priority
-          ? html`<div class="task-priority ${draggingTask.priority}">${draggingTask.priority}</div>`
-          : ""}
-      </div>
-    `;
-  }
 
   private _renderImportDialog(): TemplateResult {
     const column = this._columns.find((col) => col.id === this._importingColumnId);
