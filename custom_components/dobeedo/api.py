@@ -568,6 +568,109 @@ async def websocket_import_from_todo(
         return
 
 
+@websocket_api.websocket_command({
+    "type": f"{DOMAIN}/import_all_todos",
+    "board_id": str,
+    Optional("status_filter"): str,
+})
+@websocket_api.async_response
+async def websocket_import_all_todos(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Import all todo lists into a board, creating columns for each list.
+
+    Required fields: ``board_id``.
+    Optional fields: ``status_filter``.
+
+    For each todo entity in Home Assistant:
+    - Create a column with the todo list's name
+    - Import all items from that list into the column
+    """
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    board_id = msg["board_id"]
+    status_filter = msg.get("status_filter")
+
+    # Get all todo entities
+    todo_entities = []
+    for state in hass.states.async_all("todo"):
+        todo_entities.append({
+            "entity_id": state.entity_id,
+            "name": state.attributes.get("friendly_name", state.entity_id),
+        })
+
+    if not todo_entities:
+        connection.send_result(msg["id"], {
+            "success": True,
+            "columns_created": 0,
+            "total_imported": 0,
+        })
+        return
+
+    columns_created = 0
+    total_imported = 0
+
+    try:
+        for entity in todo_entities:
+            entity_id = entity["entity_id"]
+            entity_name = entity["name"]
+
+            # Create a column for this todo list
+            column = await manager.async_create_column(board_id, entity_name)
+            columns_created += 1
+
+            # Import items from this todo list
+            try:
+                response = await hass.services.async_call(
+                    "todo",
+                    "get_items",
+                    {"entity_id": entity_id},
+                    blocking=True,
+                    return_response=True,
+                )
+
+                items = response.get(entity_id, {}).get("items", [])
+
+                if status_filter:
+                    items = [item for item in items if item.get("status") == status_filter]
+
+                for item in items:
+                    summary = item.get("summary", "")
+                    if not summary:
+                        continue
+
+                    description = item.get("description")
+                    due_date = item.get("due")
+
+                    await manager.async_create_task(
+                        board_id,
+                        column.id,
+                        summary,
+                        description=description,
+                        due_date=due_date,
+                    )
+                    total_imported += 1
+
+            except Exception as item_err:
+                # Log error but continue with other lists
+                # eslint-disable-next-line no-console
+                print(f"Failed to import from {entity_id}: {item_err}")
+                continue
+
+        connection.send_result(msg["id"], {
+            "success": True,
+            "columns_created": columns_created,
+            "total_imported": total_imported,
+        })
+
+    except Exception as err:
+        connection.send_error(msg["id"], "import_failed", str(err))
+        return
+
+
 def async_register_api(hass: HomeAssistant) -> None:
     """Register DoBeeDo WebSocket commands with Home Assistant."""
 
@@ -585,3 +688,4 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_updates)
     websocket_api.async_register_command(hass, websocket_list_todo_entities)
     websocket_api.async_register_command(hass, websocket_import_from_todo)
+    websocket_api.async_register_command(hass, websocket_import_all_todos)

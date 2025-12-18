@@ -1314,6 +1314,33 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _handleImportAll(): Promise<void> {
+    if (!this.hass || !this._selectedBoardId) {
+      return;
+    }
+
+    if (!window.confirm("Import all Home Assistant todo lists as columns? This will create one column per todo list and import all their items.")) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      const result = await api.importAllTodos(this._selectedBoardId);
+
+      // Show success message
+      alert(
+        `Successfully imported ${result.columns_created} todo list${result.columns_created === 1 ? "" : "s"} ` +
+        `with ${result.total_imported} task${result.total_imported === 1 ? "" : "s"}!`
+      );
+
+      // WebSocket events will refresh the columns and tasks automatically
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to import all todos", err);
+      alert("Failed to import todo lists. See console for details.");
+    }
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._unsubscribeUpdates) {
@@ -1437,7 +1464,27 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _renderBoard(): TemplateResult {
+    const hasNoColumns = this._columns.length === 0;
+
     return html`
+      ${hasNoColumns
+        ? html`
+            <div style="margin-bottom: 16px; padding: 16px; background: var(--card-background-color); border-radius: 8px; text-align: center;">
+              <p style="margin: 0 0 12px 0; color: var(--secondary-text-color);">
+                No columns yet. Create columns manually or import from your Home Assistant todo lists.
+              </p>
+              <button class="primary" @click=${() => this._handleImportAll()}>
+                📥 Import All Todo Lists
+              </button>
+            </div>
+          `
+        : html`
+            <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
+              <button class="secondary small" @click=${() => this._handleImportAll()} title="Import all todo lists as columns">
+                📥 Import All
+              </button>
+            </div>
+          `}
       <div class="columns-container">
         ${this._columns.map((col) => this._renderColumn(col))} ${this._renderAddColumnMock()}
       </div>

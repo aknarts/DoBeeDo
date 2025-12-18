@@ -344,4 +344,26 @@ export class DoBeeDoApiClient {
 
     return response;
   }
+
+  public async importAllTodos(
+    boardId: string,
+    statusFilter?: string,
+  ): Promise<{ success: boolean; columns_created: number; total_imported: number }> {
+    const payload: Record<string, any> = {
+      type: "dobeedo/import_all_todos",
+      board_id: boardId,
+    };
+
+    if (statusFilter !== undefined) {
+      payload.status_filter = statusFilter;
+    }
+
+    const response = await this.connection.sendMessagePromise<{
+      success: boolean;
+      columns_created: number;
+      total_imported: number;
+    }>(payload);
+
+    return response;
+  }
 }
