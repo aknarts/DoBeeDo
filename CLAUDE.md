@@ -195,6 +195,14 @@ this._tasks = [...this._tasks, newTask];
 **Event subscription:**
 Subscribe in `updated()` lifecycle, unsubscribe in `disconnectedCallback()`.
 
+**Touch drag-and-drop:**
+For custom touch interactions that conflict with browser scrolling:
+- Use `touch-action: none` CSS on draggable elements to prevent browser scroll gestures
+- Add touch event listeners with `{ passive: false }` to enable `preventDefault()`
+- Use `shadowRoot.elementsFromPoint()` for hit testing in web components
+- Temporarily hide dragging element during hit tests to see through it
+- Clean up global touch listeners in `disconnectedCallback()` and touch end handler
+
 ## Testing
 
 ### Backend Tests
@@ -228,7 +236,7 @@ The project is in MVP stage with core features complete:
 - ✅ Persistent storage (fully integrated with auto-save)
 - ✅ Frontend panel with task creation/editing/moving/deleting
 - ✅ Multi-board support with tab-style board selector
-- ✅ Drag-and-drop task management (with visual feedback and ghost preview)
+- ✅ Drag-and-drop task management (desktop and mobile/touch with visual feedback)
 - ✅ Task priorities (high/medium/low with color-coded badges)
 - ✅ Task tags (comma-separated, displayed as badges)
 - ✅ Due dates (with overdue indicators and relative display)
