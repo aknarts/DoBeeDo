@@ -104,9 +104,6 @@ export class DoBeeDoPanel extends LitElement {
   @state()
   private _importStatusFilter: string = "";
 
-  @state()
-  private _touchDebugLog: string[] = [];
-
   private _boundTouchMove: ((ev: TouchEvent) => void) | null = null;
   private _boundTouchEnd: ((ev: TouchEvent) => void) | null = null;
 
@@ -694,28 +691,6 @@ export class DoBeeDoPanel extends LitElement {
         justify-content: flex-end;
         margin-top: 16px;
       }
-
-      /* Touch debug overlay */
-      .touch-debug-overlay {
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
-        max-height: 150px;
-        background: rgba(0, 0, 0, 0.85);
-        color: #0f0;
-        font-family: monospace;
-        font-size: 10px;
-        padding: 8px;
-        border-radius: 4px;
-        overflow-y: auto;
-        z-index: 9999;
-        pointer-events: none;
-      }
-
-      .touch-debug-overlay div {
-        margin-bottom: 2px;
-      }
     `;
   }
 
@@ -1028,16 +1003,9 @@ export class DoBeeDoPanel extends LitElement {
     this._dropIndicatorPosition = null;
   }
 
-  private _addTouchDebugLog(message: string): void {
-    const timestamp = new Date().toLocaleTimeString();
-    this._touchDebugLog = [...this._touchDebugLog, `[${timestamp}] ${message}`].slice(-20); // Keep last 20 messages
-  }
-
   private _handleTouchStart(task: DoBeeDoTaskSummary, ev: TouchEvent): void {
     // Prevent default to avoid scrolling while dragging
     ev.preventDefault();
-
-    this._addTouchDebugLog(`START: task ${task.id}`);
 
     const touch = ev.touches[0];
     this._touchStartY = touch.clientY;
@@ -1047,7 +1015,6 @@ export class DoBeeDoPanel extends LitElement {
     // Defer setting draggingTaskId to avoid re-render interfering with touch
     requestAnimationFrame(() => {
       this._draggingTaskId = task.id;
-      this._addTouchDebugLog(`DRAG ACTIVE: ${task.id}`);
     });
 
     // Add global listeners now that drag has started
@@ -1059,7 +1026,6 @@ export class DoBeeDoPanel extends LitElement {
 
   private _handleTouchMove(ev: TouchEvent): void {
     if (!this._touchDragging || !this._draggingTaskId) {
-      this._addTouchDebugLog('MOVE: no drag or taskId');
       return;
     }
 
@@ -1069,39 +1035,22 @@ export class DoBeeDoPanel extends LitElement {
 
     // Temporarily hide the dragging task so elementsFromPoint can see through it
     const draggingEl = this.shadowRoot?.querySelector(`.task-card.dragging`) as HTMLElement;
-    const hadDragging = !!draggingEl;
     if (draggingEl) {
       draggingEl.style.visibility = 'hidden';
     }
 
     // Find which column and position we're over
-    let elements: Element[] = [];
-    let queryMethod = 'none';
-
-    // Try shadowRoot.elementsFromPoint first
-    if (this.shadowRoot && typeof (this.shadowRoot as any).elementsFromPoint === 'function') {
-      elements = Array.from((this.shadowRoot as any).elementsFromPoint(touch.clientX, touch.clientY));
-      queryMethod = 'shadowRoot';
-    } else {
-      elements = Array.from(document.elementsFromPoint(touch.clientX, touch.clientY));
-      queryMethod = 'document';
-    }
+    // Try shadowRoot.elementsFromPoint first for better shadow DOM support
+    const elements = this.shadowRoot && typeof (this.shadowRoot as any).elementsFromPoint === 'function'
+      ? Array.from((this.shadowRoot as any).elementsFromPoint(touch.clientX, touch.clientY))
+      : Array.from(document.elementsFromPoint(touch.clientX, touch.clientY));
 
     // Restore the dragging task visibility
     if (draggingEl) {
       draggingEl.style.visibility = 'visible';
     }
 
-    // Debug: log what elements we found (every 5th move to avoid too much spam)
-    if (Math.random() < 0.2) {
-      const elemNames = elements.slice(0, 3).map(el =>
-        `${el.tagName}.${(el.className || '').substring(0, 20)}`
-      ).join(', ');
-      this._addTouchDebugLog(`${queryMethod}: [${elements.length}] ${elemNames}`);
-    }
-
     // Look for a tasks-list element
-    let foundColumn = false;
     for (const el of elements) {
       if (el.classList.contains('tasks-list')) {
         const columnEl = el.closest('.column');
@@ -1110,22 +1059,15 @@ export class DoBeeDoPanel extends LitElement {
           if (columnId) {
             this._dragOverColumnId = columnId;
             this._calculateTouchDropPosition(columnId, touch.clientY);
-            foundColumn = true;
-            this._addTouchDebugLog(`MOVE: over ${columnId} idx=${this._dropIndicatorPosition?.index}`);
             break;
           }
         }
       }
     }
-
-    if (!foundColumn) {
-      this._addTouchDebugLog(`MOVE: no column (had drag:${hadDragging})`);
-    }
   }
 
   private _handleTouchEnd(ev: TouchEvent): void {
     if (!this._touchDragging || !this._draggingTaskId) {
-      this._addTouchDebugLog('END: no drag or taskId');
       return;
     }
 
@@ -1133,11 +1075,8 @@ export class DoBeeDoPanel extends LitElement {
 
     // Perform the drop if we have a valid drop position
     if (this._dropIndicatorPosition) {
-      this._addTouchDebugLog(`END: DROP at ${this._dropIndicatorPosition.columnId}[${this._dropIndicatorPosition.index}]`);
       const dropEvent = new DragEvent('drop');
       void this._handleDrop(this._dropIndicatorPosition.columnId, dropEvent);
-    } else {
-      this._addTouchDebugLog('END: NO drop position - CANCELLED');
     }
 
     // Remove global listeners now that drag is done
@@ -1505,11 +1444,6 @@ export class DoBeeDoPanel extends LitElement {
       <h1>DoBeeDo</h1>
       ${this._loading ? html`<p>Loading boards…</p>` : this._renderContent()}
       ${this._importingColumnId ? this._renderImportDialog() : ""}
-      ${this._touchDebugLog.length > 0 ? html`
-        <div class="touch-debug-overlay">
-          ${this._touchDebugLog.map(log => html`<div>${log}</div>`)}
-        </div>
-      ` : ""}
     `;
   }
 
