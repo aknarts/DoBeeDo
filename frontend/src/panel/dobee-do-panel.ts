@@ -1066,8 +1066,19 @@ export class DoBeeDoPanel extends LitElement {
     const touch = ev.touches[0];
     this._touchCurrentY = touch.clientY;
 
+    // Temporarily hide the dragging task so elementsFromPoint can see through it
+    const draggingEl = this.shadowRoot?.querySelector(`.task-card.dragging`) as HTMLElement;
+    if (draggingEl) {
+      draggingEl.style.visibility = 'hidden';
+    }
+
     // Find which column and position we're over
     const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+
+    // Restore the dragging task visibility
+    if (draggingEl) {
+      draggingEl.style.visibility = 'visible';
+    }
 
     // Look for a tasks-list element
     let foundColumn = false;
