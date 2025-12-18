@@ -44,43 +44,254 @@ export class DoBeeDoPanel extends LitElement {
   @state()
   private _selectedColumnId: string | null = null;
 
+  @state()
+  private _editingTaskId: string | null = null;
+
+  @state()
+  private _editTaskTitle: string = "";
+
+  @state()
+  private _editTaskDescription: string = "";
+
+  @state()
+  private _movingTaskId: string | null = null;
+
   static get styles(): CSSResultGroup {
     return css`
       :host {
         display: block;
         box-sizing: border-box;
-        padding: 16px;
+        padding: 24px;
+        background: var(--lovelace-background, var(--primary-background-color));
+        min-height: 100vh;
       }
 
       h1 {
-        margin-top: 0;
+        margin: 0 0 24px 0;
+        font-size: 2em;
+        font-weight: 300;
+        color: var(--primary-text-color);
       }
 
-      ul {
-        list-style: none;
-        padding: 0;
+      /* Buttons */
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-family: inherit;
       }
 
-      li {
-        padding: 8px 0;
+      button:hover:not(:disabled) {
+        filter: brightness(1.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       }
 
-      .board-name {
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      button.primary {
+        background-color: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, white);
+      }
+
+      button.secondary {
+        background-color: var(--card-background-color, white);
+        color: var(--primary-text-color);
+        border: 1px solid var(--divider-color, #e0e0e0);
+      }
+
+      button.small {
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+
+      /* Input fields */
+      input, select {
+        padding: 8px 12px;
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 4px;
+        background: var(--card-background-color, white);
+        color: var(--primary-text-color);
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.2s ease;
+      }
+
+      input:focus, select:focus {
+        outline: none;
+        border-color: var(--primary-color, #03a9f4);
+      }
+
+      /* Board selector */
+      .board-selector {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+
+      .board-chip {
+        padding: 8px 16px;
+        border-radius: 16px;
+        background: var(--card-background-color, white);
+        border: 2px solid var(--divider-color, #e0e0e0);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .board-chip:hover {
+        border-color: var(--primary-color, #03a9f4);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .board-chip.selected {
+        background: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, white);
+        border-color: var(--primary-color, #03a9f4);
+      }
+
+      /* Columns layout */
+      .columns-container {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 16px;
+      }
+
+      .column {
+        flex: 0 0 300px;
+        background: var(--card-background-color, white);
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 300px);
+      }
+
+      .column-header {
+        font-size: 16px;
         font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--primary-text-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
 
-      .board-description {
-        font-size: 0.9em;
-        color: var(--secondary-text-color, #666);
+      .task-count {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--secondary-text-color);
+        background: var(--divider-color, #e0e0e0);
+        padding: 2px 8px;
+        border-radius: 12px;
       }
 
-      .tasks-title {
-        margin-top: 24px;
-        font-weight: 600;
+      .tasks-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 100px;
       }
 
-      .task-item {
-        padding: 4px 0;
+      /* Task cards */
+      .task-card {
+        background: var(--lovelace-background, var(--primary-background-color));
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 6px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .task-card:hover {
+        border-color: var(--primary-color, #03a9f4);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+      }
+
+      .task-title {
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: var(--primary-text-color);
+      }
+
+      .task-description {
+        font-size: 13px;
+        color: var(--secondary-text-color);
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 4px;
+        margin-top: 8px;
+      }
+
+      /* Forms */
+      .form-section {
+        background: var(--card-background-color, white);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .form-row > * {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .helper-text {
+        font-size: 13px;
+        color: var(--secondary-text-color);
+        margin-left: 8px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 32px;
+        color: var(--secondary-text-color);
+      }
+
+      /* Utility classes */
+      .mb-16 {
+        margin-bottom: 16px;
+      }
+
+      .flex-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
       }
     `;
   }
@@ -235,25 +446,32 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
-  private async _handleEditTask(task: DoBeeDoTaskSummary): Promise<void> {
-    if (!this.hass) {
+  private _startEditTask(task: DoBeeDoTaskSummary): void {
+    this._editingTaskId = task.id;
+    this._editTaskTitle = task.title;
+    this._editTaskDescription = task.description ?? "";
+  }
+
+  private _cancelEditTask(): void {
+    this._editingTaskId = null;
+    this._editTaskTitle = "";
+    this._editTaskDescription = "";
+  }
+
+  private async _saveEditTask(): Promise<void> {
+    if (!this.hass || !this._editingTaskId) {
       return;
     }
 
-    const newTitle = window.prompt("Edit task title", task.title);
-    if (newTitle === null) {
+    const task = this._tasks.find((t) => t.id === this._editingTaskId);
+    if (!task) {
       return;
     }
 
-    const trimmedTitle = newTitle.trim();
+    const trimmedTitle = this._editTaskTitle.trim();
     if (!trimmedTitle) {
       return;
     }
-
-    const newDescription = window.prompt(
-      "Edit task description (leave empty to clear; Cancel keeps current description)",
-      task.description ?? "",
-    );
 
     const updates: { title?: string; description?: string | null } = {};
 
@@ -261,49 +479,46 @@ export class DoBeeDoPanel extends LitElement {
       updates.title = trimmedTitle;
     }
 
-    if (newDescription !== null) {
-      const trimmedDescription = newDescription.trim();
-      if (trimmedDescription !== (task.description ?? "")) {
-        updates.description = trimmedDescription === "" ? null : trimmedDescription;
-      }
+    const trimmedDescription = this._editTaskDescription.trim();
+    if (trimmedDescription !== (task.description ?? "")) {
+      updates.description = trimmedDescription === "" ? null : trimmedDescription;
     }
 
     if (!updates.title && updates.description === undefined) {
+      this._cancelEditTask();
       return;
     }
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
-      const updated = await api.updateTask(task.id, updates);
+      const updated = await api.updateTask(this._editingTaskId, updates);
       this._tasks = this._tasks.map((t) => (t.id === updated.id ? updated : t));
+      this._cancelEditTask();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to update DoBeeDo task", err);
     }
   }
 
-  private async _handleMoveTask(task: DoBeeDoTaskSummary): Promise<void> {
-    if (!this.hass) {
-      return;
-    }
+  private _startMoveTask(task: DoBeeDoTaskSummary): void {
+    this._movingTaskId = task.id;
+  }
 
-    if (this._columns.length === 0) {
-      return;
-    }
+  private _cancelMoveTask(): void {
+    this._movingTaskId = null;
+  }
 
-    const targetColumnId = window.prompt(
-      "Move task to column ID (use one of: " + this._columns.map((c) => c.id).join(", ") + ")",
-      task.column_id,
-    );
-
-    if (!targetColumnId) {
+  private async _handleMoveTask(task: DoBeeDoTaskSummary, targetColumnId: string): Promise<void> {
+    if (!this.hass || targetColumnId === task.column_id) {
+      this._cancelMoveTask();
       return;
     }
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
-      const moved = await api.moveTask(task.id, targetColumnId || task.column_id);
+      const moved = await api.moveTask(task.id, targetColumnId);
       this._tasks = this._tasks.map((t) => (t.id === moved.id ? moved : t));
+      this._cancelMoveTask();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to move DoBeeDo task", err);
@@ -341,170 +556,242 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   protected render(): TemplateResult {
-    const selectedBoard = this._boards.find((b) => b.id === this._selectedBoardId) ?? null;
-
-    // eslint-disable-next-line no-console
-    console.debug("DoBeeDo render", {
-      boards: this._boards,
-      selectedBoardId: this._selectedBoardId,
-      columns: this._columns,
-      selectedColumnId: this._selectedColumnId,
-    });
-
     return html`
       <h1>DoBeeDo</h1>
 
-      <div style="margin-bottom: 16px;">
-        <button
-          @click=${() => this._handlePopulateTestData()}
-          style="background-color: var(--primary-color, #03a9f4); color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;"
-          ?disabled=${this._loading}
-        >
+      <div class="flex-row mb-16">
+        <button class="primary" @click=${() => this._handlePopulateTestData()} ?disabled=${this._loading}>
           Populate Test Data
         </button>
-        <span style="margin-left: 8px; color: var(--secondary-text-color, #666); font-size: 0.9em;">
-          (Development helper - adds sample board with tasks)
-        </span>
+        <span class="helper-text">(Development helper - adds sample board with tasks)</span>
       </div>
 
-      ${this._loading
-        ? html`<p>Loading boards…</p>`
+      ${this._loading ? html`<p>Loading boards…</p>` : this._renderContent()}
+    `;
+  }
+
+  private _renderContent(): TemplateResult {
+    if (this._boards.length === 0) {
+      return html`
+        <div class="empty-state">
+          <p>No boards available yet.</p>
+          <p>Click "Populate Test Data" to get started!</p>
+        </div>
+      `;
+    }
+
+    return html`
+      ${this._renderBoardSelector()}
+      ${this._selectedBoardId ? this._renderBoard() : html`<p>Select a board to begin</p>`}
+    `;
+  }
+
+  private _renderBoardSelector(): TemplateResult {
+    return html`
+      <div class="board-selector">
+        ${this._boards.map(
+          (board) => html`
+            <div
+              class="board-chip ${board.id === this._selectedBoardId ? "selected" : ""}"
+              @click=${() => this._handleSelectBoard(board)}
+            >
+              ${board.name}
+            </div>
+          `,
+        )}
+      </div>
+    `;
+  }
+
+  private _renderBoard(): TemplateResult {
+    return html`
+      <div class="form-section">
+        <label class="form-label">Add Column</label>
+        <div class="form-row">
+          <div>
+            <input
+              type="text"
+              .value=${this._newColumnName}
+              placeholder="Column name (e.g., To Do, In Progress, Done)"
+              @input=${(ev: Event) => {
+                const target = ev.target as HTMLInputElement;
+                this._newColumnName = target.value;
+              }}
+              @keydown=${(ev: KeyboardEvent) => {
+                if (ev.key === "Enter") {
+                  void this._handleCreateColumn();
+                }
+              }}
+            />
+          </div>
+          <button
+            class="primary"
+            @click=${() => this._handleCreateColumn()}
+            ?disabled=${!this._newColumnName.trim() || !this._selectedBoardId}
+          >
+            Add Column
+          </button>
+        </div>
+      </div>
+
+      ${this._columns.length === 0
+        ? html`<div class="empty-state">No columns yet. Add a column to get started!</div>`
         : html`
-            ${this._boards.length === 0
-              ? html`<p>No boards available yet. Backend logic is still being implemented.</p>`
-              : html`
-                  <ul>
-                    ${this._boards.map(
-                      (board) => html`
-                        <li
-                          @click=${() => this._handleSelectBoard(board)}
-                          style="cursor: pointer; ${
-                            board.id === this._selectedBoardId ? "font-weight: 700;" : ""
-                          }"
-                        >
-                          <div class="board-name">${board.name}</div>
-                          ${board.description
-                            ? html`<div class="board-description">
-                                ${board.description}
-                              </div>`
-                            : ""}
-                        </li>
-                      `,
-                    )}
-                  </ul>
+            <div class="columns-container">${this._columns.map((col) => this._renderColumn(col))}</div>
 
-                  <div class="tasks-title">
-                    Tasks on ${selectedBoard ? selectedBoard.name : "(no board selected)"}
-                  </div>
-
-                  <div style="margin-bottom: 16px;">
-                    <input
-                      type="text"
-                      .value=${this._newColumnName}
-                      placeholder="New column name"
-                      @input=${(ev: Event) => {
-                        const target = ev.target as HTMLInputElement;
-                        this._newColumnName = target.value;
-                      }}
-                    />
-                    <button
-                      @click=${() => this._handleCreateColumn()}
-                      ?disabled=${!this._newColumnName.trim() || !this._selectedBoardId}
-                    >
-                      Add column
-                    </button>
-                  </div>
-
-                  <div style="display: flex; gap: 16px; align-items: flex-start;">
-                    ${this._columns.length === 0
-                      ? html`<p>No columns defined for this board yet.</p>`
-                      : this._columns.map((col) => {
-                          const tasksForColumn = this._tasks
-                            .filter((task) => task.column_id === col.id)
-                            .sort((a, b) => a.sort_index - b.sort_index);
-                          return html`
-                            <div>
-                              <div class="board-name">${col.name}</div>
-                              ${tasksForColumn.length === 0
-                                ? html`<p>No tasks in this column.</p>`
-                                : html`<ul>
-                                    ${tasksForColumn.map(
-                                      (task) => html`<li class="task-item">
-                                        <div>
-                                          <div>${task.title}</div>
-                                          ${task.description
-                                            ? html`<div class="board-description">
-                                                ${task.description}
-                                              </div>`
-                                            : ""}
-                                        </div>
-                                        <button @click=${() => this._handleEditTask(task)}>
-                                          Edit details
-                                        </button>
-                                        <button @click=${() => this._handleMoveTask(task)}>
-                                          Move
-                                        </button>
-                                      </li>`,
-                                    )}
-                                  </ul>`}
-                            </div>
-                          `;
-                        })}
-                  </div>
-
-                  <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px; border: 1px dashed red; padding: 4px;">
-                    <span>New task:</span>
-                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                      <input
-                        type="text"
-                        .value=${this._newTaskTitle}
-                        placeholder="New task title"
-                        @input=${(ev: Event) => {
-                          const target = ev.target as HTMLInputElement;
-                          this._newTaskTitle = target.value;
-                        }}
-                      />
-                      <input
-                        type="text"
-                        .value=${this._newTaskDescription}
-                        placeholder="New task description (optional)"
-                        @input=${(ev: Event) => {
-                          const target = ev.target as HTMLInputElement;
-                          this._newTaskDescription = target.value;
-                        }}
-                      />
-
-                      <select
-                        .value=${this._selectedColumnId ?? ""}
-                        @change=${(ev: Event) => {
-                          const target = ev.target as HTMLSelectElement;
-                          this._selectedColumnId = target.value || null;
-                        }}
-                      >
-                        ${this._columns.map(
-                          (col) => html`<option value=${col.id}>${col.name}</option>`,
-                        )}
-                      </select>
-
-                      <button
-                        @click=${() => this._handleCreateTask()}
-                        ?disabled=${
-                          !this._newTaskTitle.trim() ||
-                          this._loading ||
-                          !this._selectedBoardId ||
-                          !this._selectedColumnId
-                        }
-                      >
-                        Add task
-                      </button>
-                    </div>
-                  </div>
-                `}
+            <div class="form-section">
+              <label class="form-label">Create New Task</label>
+              <div class="form-row">
+                <div style="flex: 2;">
+                  <input
+                    type="text"
+                    .value=${this._newTaskTitle}
+                    placeholder="Task title"
+                    @input=${(ev: Event) => {
+                      const target = ev.target as HTMLInputElement;
+                      this._newTaskTitle = target.value;
+                    }}
+                    @keydown=${(ev: KeyboardEvent) => {
+                      if (ev.key === "Enter") {
+                        void this._handleCreateTask();
+                      }
+                    }}
+                  />
+                </div>
+                <div style="flex: 2;">
+                  <input
+                    type="text"
+                    .value=${this._newTaskDescription}
+                    placeholder="Description (optional)"
+                    @input=${(ev: Event) => {
+                      const target = ev.target as HTMLInputElement;
+                      this._newTaskDescription = target.value;
+                    }}
+                  />
+                </div>
+                <div style="flex: 1;">
+                  <select
+                    .value=${this._selectedColumnId ?? ""}
+                    @change=${(ev: Event) => {
+                      const target = ev.target as HTMLSelectElement;
+                      this._selectedColumnId = target.value || null;
+                    }}
+                  >
+                    ${this._columns.map((col) => html`<option value=${col.id}>${col.name}</option>`)}
+                  </select>
+                </div>
+                <button
+                  class="primary"
+                  @click=${() => this._handleCreateTask()}
+                  ?disabled=${!this._newTaskTitle.trim() ||
+                  this._loading ||
+                  !this._selectedBoardId ||
+                  !this._selectedColumnId}
+                >
+                  Add Task
+                </button>
+              </div>
+            </div>
           `}
-      <p>
-        This is the early DoBeeDo panel. The full board view, columns, and task
-        management UI will be added in later phases.
-      </p>
+    `;
+  }
+
+  private _renderColumn(column: DoBeeDoColumnSummary): TemplateResult {
+    const tasksForColumn = this._tasks
+      .filter((task) => task.column_id === column.id)
+      .sort((a, b) => a.sort_index - b.sort_index);
+
+    return html`
+      <div class="column">
+        <div class="column-header">
+          <span>${column.name}</span>
+          <span class="task-count">${tasksForColumn.length}</span>
+        </div>
+        <div class="tasks-list">
+          ${tasksForColumn.length === 0
+            ? html`<div class="empty-state" style="padding: 16px; font-size: 13px;">
+                No tasks yet
+              </div>`
+            : tasksForColumn.map((task) => this._renderTask(task))}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderTask(task: DoBeeDoTaskSummary): TemplateResult {
+    const isEditing = this._editingTaskId === task.id;
+    const isMoving = this._movingTaskId === task.id;
+
+    if (isEditing) {
+      return html`
+        <div class="task-card" style="padding: 16px;">
+          <div style="margin-bottom: 8px;">
+            <input
+              type="text"
+              .value=${this._editTaskTitle}
+              placeholder="Task title"
+              @input=${(ev: Event) => {
+                const target = ev.target as HTMLInputElement;
+                this._editTaskTitle = target.value;
+              }}
+              style="width: 100%; margin-bottom: 8px;"
+            />
+            <input
+              type="text"
+              .value=${this._editTaskDescription}
+              placeholder="Description (optional)"
+              @input=${(ev: Event) => {
+                const target = ev.target as HTMLInputElement;
+                this._editTaskDescription = target.value;
+              }}
+              style="width: 100%;"
+            />
+          </div>
+          <div class="task-actions">
+            <button class="primary small" @click=${() => this._saveEditTask()}>Save</button>
+            <button class="secondary small" @click=${() => this._cancelEditTask()}>Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (isMoving) {
+      return html`
+        <div class="task-card" style="padding: 16px;">
+          <div class="task-title" style="margin-bottom: 8px;">${task.title}</div>
+          <div style="font-size: 12px; margin-bottom: 8px; color: var(--secondary-text-color);">
+            Move to column:
+          </div>
+          <select
+            style="width: 100%; margin-bottom: 8px;"
+            @change=${(ev: Event) => {
+              const target = ev.target as HTMLSelectElement;
+              void this._handleMoveTask(task, target.value);
+            }}
+          >
+            <option value="">-- Select column --</option>
+            ${this._columns.map(
+              (col) => html`
+                <option value=${col.id} ?selected=${col.id === task.column_id}>
+                  ${col.name} ${col.id === task.column_id ? "(current)" : ""}
+                </option>
+              `,
+            )}
+          </select>
+          <button class="secondary small" @click=${() => this._cancelMoveTask()}>Cancel</button>
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="task-card">
+        <div class="task-title">${task.title}</div>
+        ${task.description ? html`<div class="task-description">${task.description}</div>` : ""}
+        <div class="task-actions">
+          <button class="secondary small" @click=${() => this._startEditTask(task)}>Edit</button>
+          <button class="secondary small" @click=${() => this._startMoveTask(task)}>Move</button>
+        </div>
+      </div>
     `;
   }
 }
