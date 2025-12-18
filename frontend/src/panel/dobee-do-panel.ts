@@ -336,6 +336,7 @@ export class DoBeeDoPanel extends LitElement {
       .tasks-list {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -886,6 +887,7 @@ export class DoBeeDoPanel extends LitElement {
 
   private async _handleDrop(columnId: string, ev: DragEvent): Promise<void> {
     ev.preventDefault();
+    ev.stopPropagation();
     this._dragOverColumnId = null;
 
     if (!this._draggingTaskId || !this.hass) {
@@ -906,7 +908,11 @@ export class DoBeeDoPanel extends LitElement {
     let targetIndex = tasksInColumn.length; // Default to end
 
     // Find the task element we're hovering over
-    const tasksListEl = (ev.currentTarget as HTMLElement).querySelector(".tasks-list");
+    const currentEl = ev.currentTarget as HTMLElement;
+    const tasksListEl = currentEl.classList.contains("tasks-list")
+      ? currentEl
+      : currentEl.querySelector(".tasks-list");
+
     if (tasksListEl) {
       const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
       const mouseY = ev.clientY;
@@ -1178,7 +1184,11 @@ export class DoBeeDoPanel extends LitElement {
             ×
           </button>
         </div>
-        <div class="tasks-list ${isDragOver ? "drag-over" : ""}">
+        <div
+          class="tasks-list ${isDragOver ? "drag-over" : ""}"
+          @dragover=${this._handleDragOver}
+          @drop=${(ev: DragEvent) => this._handleDrop(column.id, ev)}
+        >
           ${tasksForColumn.length === 0
             ? html`<div class="empty-state" style="padding: 16px; font-size: 13px;">
                 No tasks yet
