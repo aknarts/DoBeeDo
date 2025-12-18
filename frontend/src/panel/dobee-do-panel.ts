@@ -367,15 +367,24 @@ export class DoBeeDoPanel extends LitElement {
         transform: rotate(2deg);
       }
 
+      .column.drag-active {
+        border: 2px solid var(--primary-color);
+        border-style: dashed;
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.05);
+      }
+
       .column.drag-over {
-        background: var(--primary-color);
-        opacity: 0.1;
+        border: 3px solid var(--primary-color);
+        border-style: solid;
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.1);
+        box-shadow: 0 0 20px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
       }
 
       .tasks-list.drag-over {
-        background: var(--primary-color);
-        opacity: 0.2;
-        border-radius: 4px;
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.15);
+        border: 2px dashed var(--primary-color);
+        border-radius: 8px;
+        min-height: 150px;
       }
 
       .task-title {
@@ -460,6 +469,14 @@ export class DoBeeDoPanel extends LitElement {
         border-style: solid;
         background: var(--card-background-color);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Prevent drag styling on add-column-mock */
+      .add-column-mock.drag-active {
+        border: 2px dashed var(--primary-text-color);
+        background: transparent;
+        opacity: 0.3;
+        box-shadow: none;
       }
 
       .add-column-form {
@@ -1116,8 +1133,9 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _renderAddColumnMock(): TemplateResult {
+    const isDragActive = this._draggingTaskId !== null;
     return html`
-      <div class="column add-column-mock">
+      <div class="column add-column-mock ${isDragActive ? "drag-active" : ""}">
         <div class="add-column-form">
           <input
             type="text"
@@ -1162,10 +1180,11 @@ export class DoBeeDoPanel extends LitElement {
       .sort((a, b) => a.sort_index - b.sort_index);
 
     const isDragOver = this._dragOverColumnId === column.id;
+    const isDragActive = this._draggingTaskId !== null;
 
     return html`
       <div
-        class="column ${isDragOver ? "drag-over" : ""}"
+        class="column ${isDragActive ? "drag-active" : ""} ${isDragOver ? "drag-over" : ""}"
         @dragover=${this._handleDragOver}
         @dragenter=${() => this._handleDragEnterColumn(column.id)}
         @dragleave=${this._handleDragLeaveColumn}
