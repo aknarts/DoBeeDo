@@ -1237,33 +1237,9 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    // Calculate target sort index based on drop position
-    const tasksInColumn = this._tasks
-      .filter((t) => t.column_id === columnId && t.id !== this._draggingTaskId)
-      .sort((a, b) => a.sort_index - b.sort_index);
-
-    let targetIndex = tasksInColumn.length; // Default to end
-
-    // Find the task element we're hovering over
-    const currentEl = ev.currentTarget as HTMLElement;
-    const tasksListEl = currentEl.classList.contains("tasks-list")
-      ? currentEl
-      : currentEl.querySelector(".tasks-list");
-
-    if (tasksListEl) {
-      const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
-      const mouseY = ev.clientY;
-
-      for (let i = 0; i < taskElements.length; i++) {
-        const rect = taskElements[i].getBoundingClientRect();
-        const middle = rect.top + rect.height / 2;
-
-        if (mouseY < middle) {
-          targetIndex = i;
-          break;
-        }
-      }
-    }
+    // Use the pre-calculated drop position from dragover events
+    // This ensures we drop exactly where the indicator was shown
+    const targetIndex = this._dropIndicatorPosition?.index ?? 0;
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {

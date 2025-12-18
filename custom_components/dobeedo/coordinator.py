@@ -429,6 +429,7 @@ class DobeeDoManager:
         if target_column_id not in self._columns:
             raise KeyError(target_column_id)
 
+        old_column_id = task.column_id
         task.column_id = target_column_id
 
         # Compute target index within the destination column.
@@ -442,7 +443,13 @@ class DobeeDoManager:
             target_sort_index = len(column_tasks)
 
         task.sort_index = target_sort_index
+
+        # Reindex target column
         await self._reindex_tasks(target_column_id)
+
+        # If moved between columns, also reindex the source column
+        if old_column_id != target_column_id:
+            await self._reindex_tasks(old_column_id)
 
         self._fire_event(EVENT_TASK_MOVED, {"task": task.to_dict()})
         await self.async_save_to_storage()
