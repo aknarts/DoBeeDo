@@ -321,7 +321,6 @@
         opacity: 0.3;
         cursor: grabbing;
         transform: rotate(2deg);
-        pointer-events: none;
       }
 
       .column.drag-active {
