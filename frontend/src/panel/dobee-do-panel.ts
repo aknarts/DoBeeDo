@@ -1010,7 +1010,13 @@ export class DoBeeDoPanel extends LitElement {
     this._touchStartY = touch.clientY;
     this._touchCurrentY = touch.clientY;
     this._touchDragging = true;
-    this._draggingTaskId = task.id;
+
+    // Defer setting draggingTaskId to avoid re-render interfering with touch
+    requestAnimationFrame(() => {
+      this._draggingTaskId = task.id;
+      // eslint-disable-next-line no-console
+      console.log('[TOUCH] Started dragging task:', task.id);
+    });
 
     // Add global listeners now that drag has started
     this._boundTouchMove = this._handleTouchMove.bind(this);
@@ -1032,6 +1038,7 @@ export class DoBeeDoPanel extends LitElement {
     const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
 
     // Look for a tasks-list element
+    let foundColumn = false;
     for (const el of elements) {
       if (el.classList.contains('tasks-list')) {
         const columnEl = el.closest('.column');
@@ -1040,10 +1047,17 @@ export class DoBeeDoPanel extends LitElement {
           if (columnId) {
             this._dragOverColumnId = columnId;
             this._calculateTouchDropPosition(columnId, touch.clientY);
+            foundColumn = true;
             break;
           }
         }
       }
+    }
+
+    // Log occasionally for debugging (every 10th move to avoid spam)
+    if (!foundColumn && Math.random() < 0.1) {
+      // eslint-disable-next-line no-console
+      console.log('[TOUCH] Move - no column found at position', touch.clientX, touch.clientY);
     }
   }
 
@@ -1054,10 +1068,16 @@ export class DoBeeDoPanel extends LitElement {
 
     ev.preventDefault();
 
+    // eslint-disable-next-line no-console
+    console.log('[TOUCH] End - drop position:', this._dropIndicatorPosition);
+
     // Perform the drop if we have a valid drop position
     if (this._dropIndicatorPosition) {
       const dropEvent = new DragEvent('drop');
       void this._handleDrop(this._dropIndicatorPosition.columnId, dropEvent);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('[TOUCH] End - NO drop position, drag cancelled');
     }
 
     // Remove global listeners now that drag is done
