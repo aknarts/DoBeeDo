@@ -84,6 +84,15 @@ export class DoBeeDoPanel extends LitElement {
   private _dropIndicatorPosition: { columnId: string; index: number } | null = null;
 
   @state()
+  private _touchDragging: boolean = false;
+
+  @state()
+  private _touchStartY: number = 0;
+
+  @state()
+  private _touchCurrentY: number = 0;
+
+  @state()
   private _importingColumnId: string | null = null;
 
   @state()
@@ -94,6 +103,9 @@ export class DoBeeDoPanel extends LitElement {
 
   @state()
   private _importStatusFilter: string = "";
+
+  private _boundTouchMove: ((ev: TouchEvent) => void) | null = null;
+  private _boundTouchEnd: ((ev: TouchEvent) => void) | null = null;
 
   static get styles(): CSSResultGroup {
     return css`
@@ -1064,6 +1076,151 @@ export class DoBeeDoPanel extends LitElement {
     this._dropIndicatorPosition = null;
   }
 
+  private _handleTouchStart(task: DoBeeDoTaskSummary, ev: TouchEvent): void {
+    // Prevent default to avoid scrolling while dragging
+    ev.preventDefault();
+
+    const touch = ev.touches[0];
+    this._touchStartY = touch.clientY;
+    this._touchCurrentY = touch.clientY;
+    this._touchDragging = true;
+    this._draggingTaskId = task.id;
+  }
+
+  private _handleTouchMove(ev: TouchEvent): void {
+    if (!this._touchDragging || !this._draggingTaskId) {
+      return;
+    }
+
+    ev.preventDefault();
+    const touch = ev.touches[0];
+    this._touchCurrentY = touch.clientY;
+
+    // Find which column and position we're over
+    const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+
+    // Look for a tasks-list element
+    for (const el of elements) {
+      if (el.classList.contains('tasks-list')) {
+        const columnEl = el.closest('.column');
+        if (columnEl) {
+          const columnId = this._getColumnIdFromElement(columnEl as HTMLElement);
+          if (columnId) {
+            this._dragOverColumnId = columnId;
+            this._calculateTouchDropPosition(columnId, touch.clientY);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  private _handleTouchEnd(ev: TouchEvent): void {
+    if (!this._touchDragging || !this._draggingTaskId) {
+      return;
+    }
+
+    ev.preventDefault();
+
+    // Perform the drop if we have a valid drop position
+    if (this._dropIndicatorPosition) {
+      const dropEvent = new DragEvent('drop');
+      void this._handleDrop(this._dropIndicatorPosition.columnId, dropEvent);
+    }
+
+    // Clean up touch state
+    this._touchDragging = false;
+    this._draggingTaskId = null;
+    this._dragOverColumnId = null;
+    this._dropIndicatorPosition = null;
+    this._touchStartY = 0;
+    this._touchCurrentY = 0;
+  }
+
+  private _getColumnIdFromElement(columnEl: HTMLElement): string | null {
+    // Find the column by looking through our columns and matching the rendered elements
+    const columns = this.shadowRoot?.querySelectorAll('.column');
+    if (!columns) return null;
+
+    for (let i = 0; i < columns.length; i++) {
+      if (columns[i] === columnEl && i < this._columns.length) {
+        return this._columns[i].id;
+      }
+    }
+    return null;
+  }
+
+  private _calculateTouchDropPosition(columnId: string, touchY: number): void {
+    const columnEl = Array.from(this.shadowRoot?.querySelectorAll('.column') || [])
+      .find(el => this._getColumnIdFromElement(el as HTMLElement) === columnId);
+
+    if (!columnEl) return;
+
+    const tasksListEl = columnEl.querySelector('.tasks-list');
+    if (!tasksListEl) return;
+
+    const taskElements = Array.from(tasksListEl.querySelectorAll('.task-card:not(.dragging):not(.drop-preview)'));
+
+    if (taskElements.length === 0) {
+      this._dropIndicatorPosition = { columnId, index: 0 };
+      return;
+    }
+
+    let dropIndex = taskElements.length;
+
+    // Use hysteresis to prevent rapid switching at boundaries
+    const HYSTERESIS = 0.15; // 15% hysteresis zone on each side of center
+
+    for (let i = 0; i < taskElements.length; i++) {
+      const rect = taskElements[i].getBoundingClientRect();
+      const taskTop = rect.top;
+      const taskBottom = rect.bottom;
+      const taskHeight = taskBottom - taskTop;
+      const taskMiddle = taskTop + taskHeight / 2;
+
+      // Define hysteresis boundaries
+      const upperBoundary = taskTop + taskHeight * (0.5 - HYSTERESIS);
+      const lowerBoundary = taskTop + taskHeight * (0.5 + HYSTERESIS);
+
+      // Check if we're currently at position i or i+1 for this task
+      const currentIndex = this._dropIndicatorPosition?.index;
+      const isCurrentlyBefore = currentIndex === i;
+      const isCurrentlyAfter = currentIndex === i + 1;
+
+      // If we're in the hysteresis zone, keep the current position
+      if (touchY >= upperBoundary && touchY < lowerBoundary) {
+        if (isCurrentlyBefore) {
+          dropIndex = i;
+          break;
+        } else if (isCurrentlyAfter) {
+          dropIndex = i + 1;
+          break;
+        }
+        // If neither, default to the closer one
+        if (touchY < taskMiddle) {
+          dropIndex = i;
+        } else {
+          dropIndex = i + 1;
+        }
+        break;
+      }
+
+      // If touch is clearly in the top zone (above hysteresis), drop before
+      if (touchY >= taskTop && touchY < upperBoundary) {
+        dropIndex = i;
+        break;
+      }
+
+      // If touch is clearly in the bottom zone (below hysteresis), drop after
+      if (touchY >= lowerBoundary && touchY < taskBottom) {
+        dropIndex = i + 1;
+        break;
+      }
+    }
+
+    this._dropIndicatorPosition = { columnId, index: dropIndex };
+  }
+
   private _handleDragOver(ev: DragEvent): void {
     ev.preventDefault();
     if (ev.dataTransfer) {
@@ -1092,22 +1249,51 @@ export class DoBeeDoPanel extends LitElement {
     let dropIndex = taskElements.length; // Default to end (after all tasks)
 
     // Find the insertion point based on mouse position
-    // Split each task into top/bottom halves for better precision
+    // Use hysteresis to prevent rapid switching at boundaries
+    const HYSTERESIS = 0.15; // 15% hysteresis zone on each side of center
+
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
       const taskTop = rect.top;
       const taskBottom = rect.bottom;
-      const taskMiddle = taskTop + (taskBottom - taskTop) / 2;
+      const taskHeight = taskBottom - taskTop;
+      const taskMiddle = taskTop + taskHeight / 2;
 
-      // If mouse is in the top half of this task, drop before it
-      if (mouseY >= taskTop && mouseY < taskMiddle) {
+      // Define hysteresis boundaries
+      const upperBoundary = taskTop + taskHeight * (0.5 - HYSTERESIS);
+      const lowerBoundary = taskTop + taskHeight * (0.5 + HYSTERESIS);
+
+      // Check if we're currently at position i or i+1 for this task
+      const currentIndex = this._dropIndicatorPosition?.index;
+      const isCurrentlyBefore = currentIndex === i;
+      const isCurrentlyAfter = currentIndex === i + 1;
+
+      // If we're in the hysteresis zone, keep the current position
+      if (mouseY >= upperBoundary && mouseY < lowerBoundary) {
+        if (isCurrentlyBefore) {
+          dropIndex = i;
+          break;
+        } else if (isCurrentlyAfter) {
+          dropIndex = i + 1;
+          break;
+        }
+        // If neither, default to the closer one
+        if (mouseY < taskMiddle) {
+          dropIndex = i;
+        } else {
+          dropIndex = i + 1;
+        }
+        break;
+      }
+
+      // If mouse is clearly in the top zone (above hysteresis), drop before
+      if (mouseY >= taskTop && mouseY < upperBoundary) {
         dropIndex = i;
         break;
       }
 
-      // If mouse is in the bottom half of this task, drop after it
-      // (which is before the next task, or at the end if this is the last)
-      if (mouseY >= taskMiddle && mouseY < taskBottom) {
+      // If mouse is clearly in the bottom zone (below hysteresis), drop after
+      if (mouseY >= lowerBoundary && mouseY < taskBottom) {
         dropIndex = i + 1;
         break;
       }
@@ -1352,11 +1538,29 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    // Add global touch event listeners for drag-and-drop
+    this._boundTouchMove = this._handleTouchMove.bind(this);
+    this._boundTouchEnd = this._handleTouchEnd.bind(this);
+    document.addEventListener('touchmove', this._boundTouchMove, { passive: false });
+    document.addEventListener('touchend', this._boundTouchEnd, { passive: false });
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._unsubscribeUpdates) {
       this._unsubscribeUpdates();
       this._unsubscribeUpdates = null;
+    }
+    // Remove global touch event listeners
+    if (this._boundTouchMove) {
+      document.removeEventListener('touchmove', this._boundTouchMove);
+      this._boundTouchMove = null;
+    }
+    if (this._boundTouchEnd) {
+      document.removeEventListener('touchend', this._boundTouchEnd);
+      this._boundTouchEnd = null;
     }
   }
 
@@ -1811,6 +2015,9 @@ export class DoBeeDoPanel extends LitElement {
         draggable="true"
         @dragstart=${(ev: DragEvent) => this._handleDragStart(task, ev)}
         @dragend=${this._handleDragEnd}
+        @touchstart=${(ev: TouchEvent) => this._handleTouchStart(task, ev)}
+        @touchmove=${(ev: TouchEvent) => this._handleTouchMove(ev)}
+        @touchend=${(ev: TouchEvent) => this._handleTouchEnd(ev)}
       >
         <div class="task-title">${task.title}</div>
         ${task.description ? html`<div class="task-description">${task.description}</div>` : ""}
