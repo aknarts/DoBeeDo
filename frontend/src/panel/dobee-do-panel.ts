@@ -1196,6 +1196,7 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _handleDragOver(ev: DragEvent): void {
+    console.log("Drag over fired, draggingTaskId:", this._draggingTaskId);
     ev.preventDefault();
     if (ev.dataTransfer) {
       ev.dataTransfer.dropEffect = "move";
@@ -1981,6 +1982,10 @@ export class DoBeeDoPanel extends LitElement {
 
     const isDragging = this._draggingTaskId === task.id;
     const isOverdue = this._isTaskOverdue(task);
+
+    if (isDragging) {
+      console.log("Rendering task", task.id, "as DRAGGING");
+    }
 
     return html`
       <div
