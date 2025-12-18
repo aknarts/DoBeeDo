@@ -222,15 +222,23 @@ Tests use vitest and are located alongside source files (e.g., `dobeedo-api.test
 
 ## Current State & Roadmap
 
-The project is in early MVP stage:
+The project is in MVP stage with core features complete:
 - ✅ Backend CRUD for boards, columns, tasks
 - ✅ WebSocket API with real-time events
-- ✅ Basic frontend panel with task creation/editing/moving
-- ⏳ Drag-and-drop task management (planned)
+- ✅ Persistent storage (fully integrated with auto-save)
+- ✅ Frontend panel with task creation/editing/moving/deleting
+- ✅ Multi-board support with tab-style board selector
+- ✅ Drag-and-drop task management (with visual feedback and ghost preview)
+- ✅ Task priorities (high/medium/low with color-coded badges)
+- ✅ Task tags (comma-separated, displayed as badges)
+- ✅ Due dates (with overdue indicators and relative display)
+- ✅ Import from Home Assistant todo entities (per-column and bulk import)
+- ✅ Dark/light mode compatibility (uses HA theme variables)
 - ⏳ Subtasks/checklists (model defined, not yet wired)
 - ⏳ Entity linking and auto-completion (model defined, not yet wired)
 - ⏳ Lovelace cards (planned)
-- ⏳ Persistent storage (storage helpers exist but not fully integrated)
+- ⏳ Task filtering and search (planned)
+- ⏳ Task archiving (planned)
 
 See `README.md` for detailed milestones and `docs/DEVELOPMENT_PLAN.md` for technical planning.
 

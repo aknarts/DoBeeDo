@@ -2,12 +2,37 @@
 
 This document describes the technical plan for implementing DoBeeDo, a Home Assistant custom integration and frontend panel for kanban-style task management.
 
-It’s organized into phases and concrete tasks that can be turned into GitHub issues.
+It's organized into phases and concrete tasks that can be turned into GitHub issues.
 
 > Status legend:
 > - [x] done
 > - [ ] not started
 > - [ ] (stub) implemented as placeholder; will be replaced with real logic later
+
+## Current Status (2025-01-18)
+
+**Phase 0-2: Complete** - Core MVP is fully functional with persistent storage, real-time updates, and a polished UI.
+
+**Phase 3: Mostly Complete** - Drag-and-drop, task metadata (priorities/tags/due dates), HA todo import, and UI polish are complete. Subtasks, entity linking, and Lovelace cards remain.
+
+**Phase 4: Partially Complete** - Visual theming done. Settings view, import/export, and HACS packaging remain.
+
+**Key Features Implemented:**
+- ✅ Full CRUD for boards, columns, tasks
+- ✅ Persistent storage with auto-save
+- ✅ Real-time WebSocket updates
+- ✅ Drag-and-drop with visual feedback
+- ✅ Task priorities, tags, and due dates
+- ✅ Import from HA todo lists (per-column and bulk)
+- ✅ Multi-board support with tab navigation
+- ✅ Dark/light mode compatibility
+
+**Next Priorities:**
+- Subtasks/checklists
+- Entity linking and automation hooks
+- Lovelace cards
+- Settings view for board management
+- Task filtering and search
 
 ---
 
@@ -147,22 +172,26 @@ Under `tests/components/dobeedo/`:
 - [x] Create a main panel component in `frontend/src/panel/dobee-do-panel.ts` that:
   - [x] Registers a `dobeedo-panel` custom element.
   - [x] Accepts a `hass` property.
-  - [x] Renders a placeholder panel UI.
-- [ ] Add internal routing (board list, board view, settings).
-- [ ] Fetch initial data (boards + selected board’s tasks) via the WebSocket API.
+  - [x] Renders a full panel UI with tab-style board selector.
+- [x] Multi-board support with tab navigation (no routing needed for MVP).
+- [x] Fetch initial data (boards + selected board's tasks) via the WebSocket API.
+- [x] Real-time updates via WebSocket subscription.
 
 ### 2.4 Basic Board UI
 
-- [ ] `board-view` component:
-  - [ ] Display columns in order.
-  - [ ] Render task cards within columns.
-  - [ ] Provide a simple form to add a task to a column.
-- [ ] `task-card` component:
-  - [ ] Display title, short description/summary, and key badges (tags, due date).
-  - [ ] Open a dialog when clicked.
-- [ ] `task-details-dialog` component:
-  - [ ] Edit title, description, column, due date, tags.
-  - [ ] Save/cancel actions wired to the API client.
+- [x] Board view with columns:
+  - [x] Display columns in order with task counts.
+  - [x] Render task cards within columns (sorted by sort_index).
+  - [x] Inline form to add a task to a column with title, description, due date, priority, and tags.
+  - [x] Inline form to add a new column.
+- [x] Task card display:
+  - [x] Display title, description, priority badge, tags badges, and due date.
+  - [x] Overdue indicator for tasks past their due date.
+  - [x] Edit and delete buttons.
+- [x] Task editing:
+  - [x] Inline edit form (replaces card when editing).
+  - [x] Edit title, description, due date, priority, and tags.
+  - [x] Save/cancel actions wired to the API client.
 
 ### 2.5 Frontend API Client
 
@@ -198,13 +227,58 @@ Under `tests/components/dobeedo/`:
 
 ### 3.1 Drag-and-Drop
 
-- [ ] Evaluate options for drag-and-drop:
-  - [ ] Native pointer events with custom logic.
-  - [ ] A small DnD helper library that works in HA’s environment.
-- [ ] Implement drag-and-drop movement of tasks between columns:
-  - [ ] Update `sort_index`/order when tasks move.
-  - [ ] Call `move_task` backend API on drop.
-  - [ ] Provide keyboard-accessible fallback (e.g., "Move to…" menu).
+- [x] Evaluate options for drag-and-drop:
+  - [x] Native HTML5 drag-and-drop API chosen.
+- [x] Implement drag-and-drop movement of tasks between columns:
+  - [x] Update `sort_index`/order when tasks move.
+  - [x] Call `move_task` backend API on drop.
+  - [x] Visual feedback: ghost preview of dragged task, pulsing drop indicator, column highlighting.
+  - [x] Drag within column for reordering.
+  - [x] Drag between columns for moving.
+  - [ ] Keyboard-accessible fallback (e.g., "Move to…" menu) - future enhancement.
+
+### 3.1a Import from Home Assistant Todo Lists
+
+- [x] Backend WebSocket API:
+  - [x] `dobeedo/list_todo_entities` - List all available HA todo entities.
+  - [x] `dobeedo/import_from_todo` - Import items from a specific todo list into a column.
+  - [x] `dobeedo/import_all_todos` - Import all todo lists as columns with their items.
+- [x] Frontend UI:
+  - [x] Import button on each column header for selective import.
+  - [x] Import dialog with todo list selector and status filter.
+  - [x] "Import All" button at board level (prominent when no columns exist).
+  - [x] Success notifications with import counts.
+
+### 3.1b Task Metadata (Priorities, Tags, Due Dates)
+
+- [x] Backend model extensions:
+  - [x] Add `priority` field (high/medium/low) to Task model.
+  - [x] Add `tags` field (list of strings) to Task model.
+  - [x] Add `due_date` field (ISO date string) to Task model.
+  - [x] Update WebSocket API and services to accept and return these fields.
+- [x] Frontend UI:
+  - [x] Priority selection dropdown (create and edit forms).
+  - [x] Priority badge display with color coding (red/orange/blue).
+  - [x] Tags input (comma-separated) in forms.
+  - [x] Tags display as purple badges on task cards.
+  - [x] Due date picker (HTML5 date input) in forms.
+  - [x] Due date display with relative formatting (Today/Tomorrow/date).
+  - [x] Overdue indicator (red styling) for tasks past due date.
+
+### 3.1c UI Polish & Theming
+
+- [x] Dark/light mode compatibility:
+  - [x] Use Home Assistant CSS variables throughout.
+  - [x] Dynamic theming for all components.
+- [x] Board selector:
+  - [x] Tab-style board navigation with hover effects.
+  - [x] Delete board buttons (with confirmation).
+  - [x] Inline board creation form.
+- [x] Visual feedback improvements:
+  - [x] Hover effects on all interactive elements.
+  - [x] Transition animations for state changes.
+  - [x] Box shadows and elevation for depth.
+  - [x] Consistent spacing and alignment.
 
 ### 3.2 Subtasks and Comments
 
@@ -256,9 +330,12 @@ Under `tests/components/dobeedo/`:
 
 ### 4.3 Performance & UX
 
-- [ ] Handle large boards gracefully (basic pagination or “load more”).
+- [ ] Handle large boards gracefully (basic pagination or "load more").
 - [ ] Improve keyboard navigation and ARIA attributes for accessibility.
-- [ ] Refine visual design to match HA themes (light/dark).
+- [x] Refine visual design to match HA themes (light/dark).
+- [ ] Add task filtering (by tag, priority, due date).
+- [ ] Add task search functionality.
+- [ ] Add task archiving/completion workflow.
 
 ### 4.4 Packaging and HACS
 
