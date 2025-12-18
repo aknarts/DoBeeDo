@@ -42,6 +42,9 @@ export class DoBeeDoPanel extends LitElement {
   private _newBoardName = "";
 
   @state()
+  private _isAddingBoard = false;
+
+  @state()
   private _unsubscribeUpdates: (() => void) | null = null;
 
   @state()
@@ -152,87 +155,92 @@ export class DoBeeDoPanel extends LitElement {
         padding: 8px;
       }
 
-      /* Board selector */
-      .board-selector {
+      /* Board tabs selector */
+      .board-tabs {
         display: flex;
-        gap: 8px;
         margin-bottom: 24px;
-        flex-wrap: wrap;
-        align-items: center;
+        border-bottom: 2px solid var(--divider-color);
+        overflow-x: auto;
+        scrollbar-width: thin;
       }
 
-      .board-chip-container {
+      .board-tab {
+        position: relative;
+        padding: 12px 20px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        color: var(--secondary-text-color);
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        white-space: nowrap;
         display: flex;
         align-items: center;
-        gap: 4px;
-        position: relative;
+        gap: 8px;
       }
 
-      .board-chip {
-        padding: 8px 16px;
-        border-radius: 16px;
-        background: var(--card-background-color, #1c1c1c);
-        border: 1px solid var(--ha-color-border-neutral-normal, #7a7a7a);
-        cursor: pointer;
-        transition: all 0.2s ease;
+      .board-tab:hover {
         color: var(--primary-text-color);
+        background: var(--secondary-background-color);
       }
 
-      .board-chip:hover {
-        border-color: var(--primary-color);
-        transform: translateY(-1px);
-        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
+      .board-tab.selected {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
       }
 
-      .board-chip.selected {
-        background: var(--primary-color);
-        color: var(--text-primary-color);
-        border-color: var(--primary-color);
-        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
-      }
-
-      .board-delete-btn {
+      .board-tab-delete {
         padding: 0;
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         border-radius: 50%;
-        background: var(--warning-color);
-        color: var(--text-primary-color);
+        background: transparent;
+        color: var(--secondary-text-color);
         border: none;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 18px;
         line-height: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        opacity: 0.7;
-        transition: opacity 0.2s ease;
-      }
-
-      .board-delete-btn:hover {
-        opacity: 1;
-      }
-
-      .add-board-container {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .add-board-input {
-        padding: 8px 16px;
-        border-radius: 16px;
-        background: var(--card-background-color, #1c1c1c);
-        border: 1px dashed var(--ha-color-border-neutral-normal, #7a7a7a);
-        color: var(--primary-text-color);
-        font-size: 14px;
-        width: 150px;
+        opacity: 0;
         transition: all 0.2s ease;
       }
 
-      .add-board-input:focus {
-        border-style: solid;
-        border-color: var(--primary-color);
+      .board-tab:hover .board-tab-delete {
+        opacity: 0.7;
+      }
+
+      .board-tab-delete:hover {
+        opacity: 1 !important;
+        color: var(--warning-color);
+        background: rgba(244, 67, 54, 0.1);
+      }
+
+      .board-tab.add-tab {
+        color: var(--primary-color);
+        padding: 12px 16px;
+      }
+
+      .board-tab.add-tab:hover {
+        background: var(--primary-color);
+        color: var(--text-primary-color);
+      }
+
+      .board-tab.add-tab.editing {
+        min-width: 200px;
+        padding: 8px 12px;
+      }
+
+      .add-board-input {
+        background: transparent;
+        border: 1px solid var(--primary-color);
+        border-radius: 4px;
+        padding: 6px 8px;
+        color: var(--primary-text-color);
+        font-size: 14px;
+        width: 150px;
         outline: none;
       }
 
@@ -244,6 +252,7 @@ export class DoBeeDoPanel extends LitElement {
       .add-board-actions {
         display: flex;
         gap: 4px;
+        align-items: center;
       }
 
       /* Columns layout */
@@ -652,6 +661,7 @@ export class DoBeeDoPanel extends LitElement {
     try {
       const newBoard = await api.createBoard(this._newBoardName.trim());
       this._newBoardName = "";
+      this._isAddingBoard = false;
 
       // Wait for WebSocket event to refresh boards, then select the new one
       // For now, manually refresh and select
@@ -965,19 +975,20 @@ export class DoBeeDoPanel extends LitElement {
 
   private _renderBoardSelector(): TemplateResult {
     return html`
-      <div class="board-selector">
+      <div class="board-tabs">
         ${this._boards.map(
           (board) => html`
-            <div class="board-chip-container">
-              <div
-                class="board-chip ${board.id === this._selectedBoardId ? "selected" : ""}"
-                @click=${() => this._handleSelectBoard(board)}
-              >
-                ${board.name}
-              </div>
+            <div
+              class="board-tab ${board.id === this._selectedBoardId ? "selected" : ""}"
+              @click=${() => this._handleSelectBoard(board)}
+            >
+              <span>${board.name}</span>
               <button
-                class="board-delete-btn"
-                @click=${() => this._handleDeleteBoard(board)}
+                class="board-tab-delete"
+                @click=${(ev: Event) => {
+                  ev.stopPropagation();
+                  this._handleDeleteBoard(board);
+                }}
                 title="Delete board"
               >
                 ×
@@ -985,38 +996,67 @@ export class DoBeeDoPanel extends LitElement {
             </div>
           `,
         )}
-        <div class="board-chip-container add-board-container">
-          <input
-            type="text"
-            class="add-board-input"
-            .value=${this._newBoardName}
-            placeholder="+ Add board"
-            @input=${(ev: Event) => {
-              const target = ev.target as HTMLInputElement;
-              this._newBoardName = target.value;
-            }}
-            @keydown=${(ev: KeyboardEvent) => {
-              if (ev.key === "Enter" && this._newBoardName.trim()) {
-                void this._handleCreateBoard();
-              }
-            }}
-          />
-          ${this._newBoardName.trim()
-            ? html`
+        ${this._isAddingBoard
+          ? html`
+              <div class="board-tab add-tab editing">
+                <input
+                  type="text"
+                  class="add-board-input"
+                  .value=${this._newBoardName}
+                  placeholder="Board name"
+                  @input=${(ev: Event) => {
+                    const target = ev.target as HTMLInputElement;
+                    this._newBoardName = target.value;
+                  }}
+                  @keydown=${(ev: KeyboardEvent) => {
+                    if (ev.key === "Enter" && this._newBoardName.trim()) {
+                      void this._handleCreateBoard();
+                    } else if (ev.key === "Escape") {
+                      this._isAddingBoard = false;
+                      this._newBoardName = "";
+                    }
+                  }}
+                  @blur=${() => {
+                    if (!this._newBoardName.trim()) {
+                      this._isAddingBoard = false;
+                    }
+                  }}
+                />
                 <div class="add-board-actions">
-                  <button class="primary small" @click=${() => this._handleCreateBoard()}>Add</button>
+                  <button
+                    class="primary small"
+                    @click=${() => this._handleCreateBoard()}
+                    ?disabled=${!this._newBoardName.trim()}
+                  >
+                    Add
+                  </button>
                   <button
                     class="secondary small"
                     @click=${() => {
+                      this._isAddingBoard = false;
                       this._newBoardName = "";
                     }}
                   >
                     Cancel
                   </button>
                 </div>
-              `
-            : ""}
-        </div>
+              </div>
+            `
+          : html`
+              <div
+                class="board-tab add-tab"
+                @click=${() => {
+                  this._isAddingBoard = true;
+                  setTimeout(() => {
+                    const input = this.shadowRoot?.querySelector(".add-board-input") as HTMLInputElement;
+                    input?.focus();
+                  }, 50);
+                }}
+                title="Add new board"
+              >
+                + Add Board
+              </div>
+            `}
       </div>
     `;
   }
