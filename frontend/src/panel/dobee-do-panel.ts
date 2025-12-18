@@ -145,8 +145,8 @@ export class DoBeeDoPanel extends LitElement {
       .board-chip {
         padding: 8px 16px;
         border-radius: 16px;
-        background: var(--card-background-color);
-        border: 2px solid var(--ha-card-border-color, var(--divider-color));
+        background: var(--card-background-color, #1c1c1c);
+        border: 1px solid var(--ha-color-border-neutral-normal, #7a7a7a);
         cursor: pointer;
         transition: all 0.2s ease;
         color: var(--primary-text-color);
@@ -155,13 +155,14 @@ export class DoBeeDoPanel extends LitElement {
       .board-chip:hover {
         border-color: var(--primary-color);
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px var(--ha-card-box-shadow, rgba(0,0,0,0.1));
+        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
       }
 
       .board-chip.selected {
         background: var(--primary-color);
         color: var(--text-primary-color);
         border-color: var(--primary-color);
+        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
       }
 
       /* Columns layout */
@@ -174,11 +175,11 @@ export class DoBeeDoPanel extends LitElement {
 
       .column {
         flex: 0 0 300px;
-        background: var(--card-background-color);
-        border: 1px solid var(--divider-color);
-        border-radius: var(--ha-card-border-radius, 8px);
+        background: var(--card-background-color, #1c1c1c);
+        border: 1px solid var(--ha-color-border-neutral-quiet, #5e5e5e);
+        border-radius: var(--ha-border-radius-md, 8px);
         padding: 16px;
-        box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,0.1));
+        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
         display: flex;
         flex-direction: column;
         max-height: calc(100vh - 300px);
@@ -214,19 +215,19 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Task cards */
       .task-card {
-        background: var(--card-background-color);
-        border: 2px solid var(--primary-color);
-        border-left: 4px solid var(--primary-color);
+        background: var(--secondary-background-color, #282828);
+        border: 1px solid var(--ha-color-border-neutral-normal, #7a7a7a);
+        border-left: 3px solid var(--ha-color-border-neutral-loud, #b1b1b1);
         border-radius: 6px;
         padding: 12px;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
       }
 
       .task-card:hover {
-        border-color: var(--accent-color, var(--primary-color));
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        border-left-color: var(--primary-color);
+        box-shadow: var(--material-shadow-elevation-4dp, 0 4px 5px 0 rgba(0,0,0,0.14));
         transform: translateY(-2px);
       }
 
