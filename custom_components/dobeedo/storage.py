@@ -23,6 +23,7 @@ class DobeeDoStorageData(TypedDict):
     boards: List[Dict[str, Any]]
     columns: List[Dict[str, Any]]
     tasks: List[Dict[str, Any]]
+    id_counters: Dict[str, int]
 
 
 class DobeeDoStorage:
@@ -80,19 +81,21 @@ class DobeeDoStorage:
         boards = list(data.get("boards", []))
         columns = list(data.get("columns", []))
         tasks = list(data.get("tasks", []))
+        id_counters = dict(data.get("id_counters", {"boards": 0, "columns": 0, "tasks": 0}))
 
         migrated: DobeeDoStorageData = {
             "schema_version": schema_version,
             "boards": boards,
             "columns": columns,
             "tasks": tasks,
+            "id_counters": id_counters,
         }
 
         return migrated
 
 
 def serialize_model(
-    boards: List[Board], columns: List[Column], tasks: List[Task]
+    boards: List[Board], columns: List[Column], tasks: List[Task], id_counters: Dict[str, int]
 ) -> DobeeDoStorageData:
     """Serialize model objects into storage data.
 
@@ -105,14 +108,16 @@ def serialize_model(
         "boards": [b.to_dict() for b in boards],
         "columns": [c.to_dict() for c in columns],
         "tasks": [t.to_dict() for t in tasks],
+        "id_counters": id_counters,
     }
 
 
-def deserialize_model(data: DobeeDoStorageData) -> tuple[List[Board], List[Column], List[Task]]:
+def deserialize_model(data: DobeeDoStorageData) -> tuple[List[Board], List[Column], List[Task], Dict[str, int]]:
     """Deserialize storage data into model objects."""
 
     boards = [Board.from_dict(item) for item in data.get("boards", [])]
     columns = [Column.from_dict(item) for item in data.get("columns", [])]
     tasks = [Task.from_dict(item) for item in data.get("tasks", [])]
-    return boards, columns, tasks
+    id_counters = dict(data.get("id_counters", {"boards": 0, "columns": 0, "tasks": 0}))
+    return boards, columns, tasks, id_counters
 

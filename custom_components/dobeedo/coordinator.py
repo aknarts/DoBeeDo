@@ -2,8 +2,7 @@
 
 This module defines :class:`DobeeDoManager`, which holds the in-memory
 representation of boards, columns, and tasks, and exposes async CRUD
-operations. Persistence will be wired in a later phase using the
-:mod:`custom_components.dobeedo.storage` helpers.
+operations. Changes are automatically persisted to storage.
 """
 from __future__ import annotations
 
@@ -23,6 +22,7 @@ from .const import (
     EVENT_COLUMN_CREATED,
 )
 from .model import Board, Column, Task
+from .storage import DobeeDoStorage, deserialize_model, serialize_model
 
 
 @dataclass
@@ -47,14 +47,122 @@ class DobeeDoManager:
     * Providing async CRUD methods that the services and WebSocket API
       can call.
     * Emitting Home Assistant events when meaningful changes occur.
+    * Persisting all changes to storage automatically.
     """
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, storage: DobeeDoStorage | None = None) -> None:
         self._hass = hass
+        self._storage = storage or DobeeDoStorage(hass)
         self._boards: Dict[str, Board] = {}
         self._columns: Dict[str, Column] = {}
         self._tasks: Dict[str, Task] = {}
         self._ids = _IdCounters()
+
+    # ---------------------------------------------------------------------
+    # Storage helpers
+    # ---------------------------------------------------------------------
+
+    async def async_populate_test_data(self) -> None:
+        """Populate the board with sample data for testing.
+
+        This creates a sample board with multiple columns and tasks if
+        no boards exist yet. Useful for quick testing without manual setup.
+        """
+        boards = await self.async_get_boards()
+        if boards:
+            # Don't populate if data already exists
+            return
+
+        # Create a test board
+        board = await self.async_create_board(
+            "Sample Project",
+            "A demo board with tasks in various states"
+        )
+
+        # Create columns for a typical kanban workflow
+        backlog = await self.async_create_column(board.id, "Backlog")
+        todo = await self.async_create_column(board.id, "To Do")
+        in_progress = await self.async_create_column(board.id, "In Progress")
+        review = await self.async_create_column(board.id, "Review")
+        done = await self.async_create_column(board.id, "Done")
+
+        # Populate backlog
+        await self.async_create_task(
+            board.id, backlog.id, "Research user requirements",
+            "Gather feedback from users about needed features"
+        )
+        await self.async_create_task(
+            board.id, backlog.id, "Design new dashboard",
+            "Create mockups for the analytics dashboard"
+        )
+
+        # Populate to-do
+        await self.async_create_task(
+            board.id, todo.id, "Set up development environment",
+            "Install dependencies and configure dev tools"
+        )
+        await self.async_create_task(
+            board.id, todo.id, "Write API documentation",
+            None
+        )
+
+        # Populate in-progress
+        await self.async_create_task(
+            board.id, in_progress.id, "Implement user authentication",
+            "Add login and registration endpoints"
+        )
+        await self.async_create_task(
+            board.id, in_progress.id, "Create database schema",
+            "Design tables for users, tasks, and boards"
+        )
+
+        # Populate review
+        await self.async_create_task(
+            board.id, review.id, "Update integration tests",
+            "Ensure all API endpoints have test coverage"
+        )
+
+        # Populate done
+        await self.async_create_task(
+            board.id, done.id, "Initial project setup",
+            "Repository created and basic structure in place"
+        )
+        await self.async_create_task(
+            board.id, done.id, "Configure CI/CD pipeline",
+            "GitHub Actions configured for automated testing"
+        )
+
+    async def async_load_from_storage(self) -> None:
+        """Load persisted data from storage into memory."""
+        data = await self._storage.async_load()
+        if data is None:
+            return
+
+        boards, columns, tasks, id_counters = deserialize_model(data)
+
+        # Restore ID counters
+        self._ids.boards = id_counters.get("boards", 0)
+        self._ids.columns = id_counters.get("columns", 0)
+        self._ids.tasks = id_counters.get("tasks", 0)
+
+        # Restore boards, columns, and tasks into dictionaries
+        self._boards = {board.id: board for board in boards}
+        self._columns = {column.id: column for column in columns}
+        self._tasks = {task.id: task for task in tasks}
+
+    async def async_save_to_storage(self) -> None:
+        """Persist current in-memory state to storage."""
+        boards = list(self._boards.values())
+        columns = list(self._columns.values())
+        tasks = list(self._tasks.values())
+        id_counters = {
+            "boards": self._ids.boards,
+            "columns": self._ids.columns,
+            "tasks": self._ids.tasks,
+        }
+
+        data = serialize_model(boards, columns, tasks, id_counters)
+        await self._storage.async_save(data)
 
     # ---------------------------------------------------------------------
     # Board helpers
@@ -84,6 +192,7 @@ class DobeeDoManager:
         self._boards[board_id] = board
 
         self._fire_event(EVENT_BOARD_CREATED, {"board": board.to_dict()})
+        await self.async_save_to_storage()
         return board
 
     async def async_update_board(self, board_id: str, **updates: Any) -> Board:
@@ -102,6 +211,7 @@ class DobeeDoManager:
             board.description = updates["description"]
 
         self._fire_event(EVENT_BOARD_UPDATED, {"board": board.to_dict()})
+        await self.async_save_to_storage()
         return board
 
     async def async_delete_board(self, board_id: str) -> None:
@@ -119,6 +229,7 @@ class DobeeDoManager:
             self._tasks.pop(tid, None)
 
         self._fire_event(EVENT_BOARD_DELETED, {"board": board.to_dict()})
+        await self.async_save_to_storage()
 
     # ---------------------------------------------------------------------
     # Column helpers
@@ -170,6 +281,7 @@ class DobeeDoManager:
 
         # Fire a column-created event so frontends can react.
         self._fire_event(EVENT_COLUMN_CREATED, {"column": column.to_dict()})
+        await self.async_save_to_storage()
 
         return column
 
@@ -233,6 +345,7 @@ class DobeeDoManager:
         await self._reindex_tasks(column_id)
 
         self._fire_event(EVENT_TASK_CREATED, {"task": task.to_dict()})
+        await self.async_save_to_storage()
         return task
 
     async def async_update_task(self, task_id: str, **updates: Any) -> Task:
@@ -249,6 +362,7 @@ class DobeeDoManager:
             task.description = updates["description"]
 
         self._fire_event(EVENT_TASK_UPDATED, {"task": task.to_dict()})
+        await self.async_save_to_storage()
         return task
 
     async def async_move_task(
@@ -280,6 +394,7 @@ class DobeeDoManager:
         await self._reindex_tasks(target_column_id)
 
         self._fire_event(EVENT_TASK_MOVED, {"task": task.to_dict()})
+        await self.async_save_to_storage()
         return task
 
     async def async_delete_task(self, task_id: str) -> None:
@@ -289,6 +404,7 @@ class DobeeDoManager:
         await self._reindex_tasks(task.column_id)
 
         self._fire_event(EVENT_TASK_DELETED, {"task": task.to_dict()})
+        await self.async_save_to_storage()
 
     async def _reindex_tasks(self, column_id: str) -> None:
         """Normalise ``sort_index`` for tasks in a column."""

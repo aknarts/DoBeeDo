@@ -330,6 +330,26 @@ async def websocket_subscribe_updates(
     connection.send_result(msg["id"], {"success": True})
 
 
+@websocket_api.websocket_command({"type": f"{DOMAIN}/populate_test_data"})
+@websocket_api.async_response
+async def websocket_populate_test_data(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Populate the board with sample test data.
+
+    This is a development/testing helper that creates a sample board
+    with columns and tasks if no data exists yet.
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    await manager.async_populate_test_data()
+    connection.send_result(msg["id"], {"success": True})
+
+
 def async_register_api(hass: HomeAssistant) -> None:
     """Register DoBeeDo WebSocket commands with Home Assistant."""
 
@@ -341,3 +361,4 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_update_task)
     websocket_api.async_register_command(hass, websocket_move_task)
     websocket_api.async_register_command(hass, websocket_subscribe_updates)
+    websocket_api.async_register_command(hass, websocket_populate_test_data)

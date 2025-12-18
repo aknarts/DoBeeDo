@@ -236,4 +236,10 @@ export class DoBeeDoApiClient {
       unsubscribe();
     };
   }
+
+  public async populateTestData(): Promise<void> {
+    await this.connection.sendMessagePromise<{ success: boolean }>({
+      type: "dobeedo/populate_test_data",
+    });
+  }
 }

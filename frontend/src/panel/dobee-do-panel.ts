@@ -310,6 +310,28 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _handlePopulateTestData(): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    if (
+      this._boards.length > 0 &&
+      !window.confirm("Test data can only be added to an empty board. Continue?")
+    ) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      await api.populateTestData();
+      await this._fetchBoards();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to populate test data", err);
+    }
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._unsubscribeUpdates) {
@@ -331,6 +353,20 @@ export class DoBeeDoPanel extends LitElement {
 
     return html`
       <h1>DoBeeDo</h1>
+
+      <div style="margin-bottom: 16px;">
+        <button
+          @click=${() => this._handlePopulateTestData()}
+          style="background-color: var(--primary-color, #03a9f4); color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;"
+          ?disabled=${this._loading}
+        >
+          Populate Test Data
+        </button>
+        <span style="margin-left: 8px; color: var(--secondary-text-color, #666); font-size: 0.9em;">
+          (Development helper - adds sample board with tasks)
+        </span>
+      </div>
+
       ${this._loading
         ? html`<p>Loading boards…</p>`
         : html`

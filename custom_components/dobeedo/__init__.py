@@ -38,16 +38,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create the central manager for this config entry.
     manager = DobeeDoManager(hass)
 
-    # Optionally seed a default board/column so the frontend has
-    # something to show on first load. Errors here should not block
-    # setup, hence the minimal try/except.
-    try:
-        board = await manager.async_create_board("My Board")
-        await manager.async_create_column(board.id, "To do")
-    except Exception:  # pragma: no cover - defensive, should not happen
-        # Log via Home Assistant's logger once available; for now we
-        # simply proceed with an empty manager.
-        pass
+    # Load persisted data from storage.
+    await manager.async_load_from_storage()
+
+    # Optionally seed a default board/column if no data exists yet.
+    # Errors here should not block setup, hence the minimal try/except.
+    boards = await manager.async_get_boards()
+    if not boards:
+        try:
+            board = await manager.async_create_board("My Board")
+            await manager.async_create_column(board.id, "To do")
+        except Exception:  # pragma: no cover - defensive, should not happen
+            # Log via Home Assistant's logger once available; for now we
+            # simply proceed with an empty manager.
+            pass
 
     hass.data[DOMAIN][entry.entry_id] = {"manager": manager}
 
