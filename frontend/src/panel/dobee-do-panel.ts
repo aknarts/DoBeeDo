@@ -42,9 +42,6 @@ export class DoBeeDoPanel extends LitElement {
   private _selectedBoardId: string | null = null;
 
   @state()
-  private _selectedColumnId: string | null = null;
-
-  @state()
   private _editingTaskId: string | null = null;
 
   @state()
@@ -262,6 +259,62 @@ export class DoBeeDoPanel extends LitElement {
         margin-top: 8px;
       }
 
+      /* Add task form at bottom of columns */
+      .add-task-form {
+        margin-top: 8px;
+        padding: 8px;
+        border-top: 1px solid var(--ha-color-border-neutral-quiet, #5e5e5e);
+      }
+
+      .add-task-input {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      .add-task-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .add-task-buttons {
+        display: flex;
+        gap: 4px;
+      }
+
+      /* Add column mock */
+      .add-column-mock {
+        background: transparent;
+        border: 2px dashed var(--ha-color-border-neutral-normal, #7a7a7a);
+        min-height: 100px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+      }
+
+      .add-column-form {
+        padding: 16px;
+        width: 100%;
+      }
+
+      .add-column-input {
+        width: 100%;
+        margin-bottom: 8px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .add-column-input::placeholder {
+        color: var(--secondary-text-color);
+        opacity: 0.7;
+      }
+
+      .add-column-buttons {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+      }
+
       /* Forms */
       .form-section {
         background: var(--card-background-color);
@@ -382,19 +435,11 @@ export class DoBeeDoPanel extends LitElement {
     if (!this.hass || !this._selectedBoardId) {
       this._columns = [];
       this._tasks = [];
-      this._selectedColumnId = null;
       return;
     }
     const api = new DoBeeDoApiClient(this.hass.connection);
     this._columns = await api.getColumns(this._selectedBoardId);
     this._tasks = await api.getTasks(this._selectedBoardId);
-
-    // Ensure selected column stays valid.
-    if (this._columns.length === 0) {
-      this._selectedColumnId = null;
-    } else if (!this._selectedColumnId || !this._columns.some((c) => c.id === this._selectedColumnId)) {
-      this._selectedColumnId = this._columns[0].id;
-    }
   }
 
   private async _refreshTasksForSelectedBoard(): Promise<void> {
@@ -414,7 +459,7 @@ export class DoBeeDoPanel extends LitElement {
     void this._refreshColumnsAndTasks();
   }
 
-  private async _handleCreateTask(): Promise<void> {
+  private async _handleCreateTask(columnId: string): Promise<void> {
     if (!this.hass || !this._selectedBoardId || !this._newTaskTitle.trim()) {
       return;
     }
@@ -422,13 +467,6 @@ export class DoBeeDoPanel extends LitElement {
     const api = new DoBeeDoApiClient(this.hass.connection);
     const board = this._boards.find((b) => b.id === this._selectedBoardId);
     if (!board) {
-      return;
-    }
-
-    const columnId = this._selectedColumnId;
-    if (!columnId) {
-      // eslint-disable-next-line no-console
-      console.warn("No column selected on the selected board to create a task in.");
       return;
     }
 
@@ -685,94 +723,54 @@ export class DoBeeDoPanel extends LitElement {
 
   private _renderBoard(): TemplateResult {
     return html`
-      <div class="form-section">
-        <label class="form-label">Add Column</label>
-        <div class="form-row">
-          <div>
-            <input
-              type="text"
-              .value=${this._newColumnName}
-              placeholder="Column name (e.g., To Do, In Progress, Done)"
-              @input=${(ev: Event) => {
-                const target = ev.target as HTMLInputElement;
-                this._newColumnName = target.value;
-              }}
-              @keydown=${(ev: KeyboardEvent) => {
-                if (ev.key === "Enter") {
-                  void this._handleCreateColumn();
-                }
-              }}
-            />
-          </div>
-          <button
-            class="primary"
-            @click=${() => this._handleCreateColumn()}
-            ?disabled=${!this._newColumnName.trim() || !this._selectedBoardId}
-          >
-            Add Column
-          </button>
-        </div>
-      </div>
-
       ${this._columns.length === 0
         ? html`<div class="empty-state">No columns yet. Add a column to get started!</div>`
-        : html`
-            <div class="columns-container">${this._columns.map((col) => this._renderColumn(col))}</div>
+        : ""}
+      <div class="columns-container">
+        ${this._columns.map((col) => this._renderColumn(col))}
+        ${this._renderAddColumnMock()}
+      </div>
+    `;
+  }
 
-            <div class="form-section">
-              <label class="form-label">Create New Task</label>
-              <div class="form-row">
-                <div style="flex: 2;">
-                  <input
-                    type="text"
-                    .value=${this._newTaskTitle}
-                    placeholder="Task title"
-                    @input=${(ev: Event) => {
-                      const target = ev.target as HTMLInputElement;
-                      this._newTaskTitle = target.value;
-                    }}
-                    @keydown=${(ev: KeyboardEvent) => {
-                      if (ev.key === "Enter") {
-                        void this._handleCreateTask();
-                      }
-                    }}
-                  />
-                </div>
-                <div style="flex: 2;">
-                  <input
-                    type="text"
-                    .value=${this._newTaskDescription}
-                    placeholder="Description (optional)"
-                    @input=${(ev: Event) => {
-                      const target = ev.target as HTMLInputElement;
-                      this._newTaskDescription = target.value;
-                    }}
-                  />
-                </div>
-                <div style="flex: 1;">
-                  <select
-                    .value=${this._selectedColumnId ?? ""}
-                    @change=${(ev: Event) => {
-                      const target = ev.target as HTMLSelectElement;
-                      this._selectedColumnId = target.value || null;
+  private _renderAddColumnMock(): TemplateResult {
+    return html`
+      <div class="column add-column-mock">
+        <div class="add-column-form">
+          <input
+            type="text"
+            class="add-column-input"
+            .value=${this._newColumnName}
+            placeholder="+ Add column"
+            @input=${(ev: Event) => {
+              const target = ev.target as HTMLInputElement;
+              this._newColumnName = target.value;
+            }}
+            @keydown=${(ev: KeyboardEvent) => {
+              if (ev.key === "Enter" && this._newColumnName.trim()) {
+                void this._handleCreateColumn();
+              }
+            }}
+          />
+          ${this._newColumnName.trim()
+            ? html`
+                <div class="add-column-buttons">
+                  <button class="primary small" @click=${() => this._handleCreateColumn()}>
+                    Add Column
+                  </button>
+                  <button
+                    class="secondary small"
+                    @click=${() => {
+                      this._newColumnName = "";
                     }}
                   >
-                    ${this._columns.map((col) => html`<option value=${col.id}>${col.name}</option>`)}
-                  </select>
+                    Cancel
+                  </button>
                 </div>
-                <button
-                  class="primary"
-                  @click=${() => this._handleCreateTask()}
-                  ?disabled=${!this._newTaskTitle.trim() ||
-                  this._loading ||
-                  !this._selectedBoardId ||
-                  !this._selectedColumnId}
-                >
-                  Add Task
-                </button>
-              </div>
-            </div>
-          `}
+              `
+            : ""}
+        </div>
+      </div>
     `;
   }
 
@@ -802,6 +800,58 @@ export class DoBeeDoPanel extends LitElement {
                 No tasks yet
               </div>`
             : tasksForColumn.map((task) => this._renderTask(task))}
+        </div>
+        <div class="add-task-form">
+          <input
+            type="text"
+            class="add-task-input"
+            .value=${this._newTaskTitle}
+            placeholder="Add a task..."
+            @input=${(ev: Event) => {
+              const target = ev.target as HTMLInputElement;
+              this._newTaskTitle = target.value;
+            }}
+            @keydown=${(ev: KeyboardEvent) => {
+              if (ev.key === "Enter" && this._newTaskTitle.trim()) {
+                void this._handleCreateTask(column.id);
+              }
+            }}
+          />
+          ${this._newTaskTitle.trim()
+            ? html`
+                <div class="add-task-actions">
+                  <input
+                    type="text"
+                    class="add-task-input"
+                    .value=${this._newTaskDescription}
+                    placeholder="Description (optional)"
+                    @input=${(ev: Event) => {
+                      const target = ev.target as HTMLInputElement;
+                      this._newTaskDescription = target.value;
+                    }}
+                    @keydown=${(ev: KeyboardEvent) => {
+                      if (ev.key === "Enter") {
+                        void this._handleCreateTask(column.id);
+                      }
+                    }}
+                  />
+                  <div class="add-task-buttons">
+                    <button class="primary small" @click=${() => this._handleCreateTask(column.id)}>
+                      Add
+                    </button>
+                    <button
+                      class="secondary small"
+                      @click=${() => {
+                        this._newTaskTitle = "";
+                        this._newTaskDescription = "";
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              `
+            : ""}
         </div>
       </div>
     `;
