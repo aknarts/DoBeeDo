@@ -105,6 +105,12 @@
         border-color: var(--input-hover-line-color, var(--primary-color));
       }
 
+      select option {
+        background: var(--card-background-color);
+        color: var(--primary-text-color);
+        padding: 8px;
+      }
+
       /* Board selector */
       .board-selector {
         display: flex;
