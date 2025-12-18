@@ -1068,26 +1068,35 @@ export class DoBeeDoPanel extends LitElement {
 
     // Temporarily hide the dragging task so elementsFromPoint can see through it
     const draggingEl = this.shadowRoot?.querySelector(`.task-card.dragging`) as HTMLElement;
+    const hadDragging = !!draggingEl;
     if (draggingEl) {
       draggingEl.style.visibility = 'hidden';
     }
 
     // Find which column and position we're over
-    // Try shadowRoot first, fall back to document
-    const elements = this.shadowRoot?.elementsFromPoint?.(touch.clientX, touch.clientY)
-      || document.elementsFromPoint(touch.clientX, touch.clientY);
+    let elements: Element[] = [];
+    let queryMethod = 'none';
+
+    // Try shadowRoot.elementsFromPoint first
+    if (this.shadowRoot && typeof (this.shadowRoot as any).elementsFromPoint === 'function') {
+      elements = Array.from((this.shadowRoot as any).elementsFromPoint(touch.clientX, touch.clientY));
+      queryMethod = 'shadowRoot';
+    } else {
+      elements = Array.from(document.elementsFromPoint(touch.clientX, touch.clientY));
+      queryMethod = 'document';
+    }
 
     // Restore the dragging task visibility
     if (draggingEl) {
       draggingEl.style.visibility = 'visible';
     }
 
-    // Debug: log what elements we found (sample 10% to avoid spam)
-    if (Math.random() < 0.1) {
-      const elemNames = Array.from(elements).slice(0, 5).map(el =>
-        `${el.tagName}.${el.className}`.substring(0, 30)
+    // Debug: log what elements we found (every 5th move to avoid too much spam)
+    if (Math.random() < 0.2) {
+      const elemNames = elements.slice(0, 3).map(el =>
+        `${el.tagName}.${(el.className || '').substring(0, 20)}`
       ).join(', ');
-      this._addTouchDebugLog(`ELEM: ${elemNames}`);
+      this._addTouchDebugLog(`${queryMethod}: [${elements.length}] ${elemNames}`);
     }
 
     // Look for a tasks-list element
@@ -1109,7 +1118,7 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     if (!foundColumn) {
-      this._addTouchDebugLog(`MOVE: no column at ${touch.clientX},${touch.clientY}`);
+      this._addTouchDebugLog(`MOVE: no column (had drag:${hadDragging})`);
     }
   }
 
