@@ -398,9 +398,11 @@ export class DoBeeDoPanel extends LitElement {
       }
 
       .task-card.dragging {
-        opacity: 0.3;
-        cursor: grabbing;
-        transform: rotate(2deg);
+        /* Temporarily disable all styling to test if CSS is causing drag to cancel */
+        /* opacity: 0.3; */
+        /* cursor: grabbing; */
+        /* transform: rotate(2deg); */
+        border: 3px solid red !important;  /* Just to see if it's being applied */
       }
 
       .column.drag-active {
@@ -1015,12 +1017,19 @@ export class DoBeeDoPanel extends LitElement {
 
   private _handleDragStart(task: DoBeeDoTaskSummary, ev: DragEvent): void {
     console.log("Desktop drag start:", task.id);
-    this._draggingTaskId = task.id;
-    console.log("Set _draggingTaskId to:", this._draggingTaskId);
     if (ev.dataTransfer) {
       ev.dataTransfer.effectAllowed = "move";
       ev.dataTransfer.setData("text/plain", task.id);
+      // Set a transparent drag image to test
+      const img = new Image();
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      ev.dataTransfer.setDragImage(img, 0, 0);
     }
+    // Defer state update to avoid interfering with drag start
+    requestAnimationFrame(() => {
+      this._draggingTaskId = task.id;
+      console.log("Set _draggingTaskId to:", this._draggingTaskId);
+    });
   }
 
   private _handleDragEnd(): void {
