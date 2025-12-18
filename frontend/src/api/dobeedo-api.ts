@@ -25,6 +25,8 @@ export interface DoBeeDoTaskSummary {
   description?: string | null;
   sort_index: number;
   due_date?: string | null;
+  priority?: string | null;
+  tags?: string[] | null;
 }
 
 export interface HassConnection {
@@ -38,6 +40,12 @@ export type DoBeeDoEventMessage = {
   payload: Record<string, any>;
   raw_type?: string;
 };
+
+export interface TodoEntity {
+  entity_id: string;
+  name: string;
+  state: string;
+}
 
 export class DoBeeDoApiClient {
   private connection: HassConnection;
@@ -121,6 +129,8 @@ export class DoBeeDoApiClient {
     title: string,
     description?: string,
     dueDate?: string,
+    priority?: string,
+    tags?: string[],
   ): Promise<DoBeeDoTaskSummary> {
     const payload: Record<string, any> = {
       type: "dobeedo/create_task",
@@ -135,6 +145,12 @@ export class DoBeeDoApiClient {
     if (dueDate !== undefined) {
       payload.due_date = dueDate;
     }
+    if (priority !== undefined) {
+      payload.priority = priority;
+    }
+    if (tags !== undefined) {
+      payload.tags = tags;
+    }
 
     const response = await this.connection.sendMessagePromise<{
       task: DoBeeDoTaskSummary;
@@ -145,7 +161,7 @@ export class DoBeeDoApiClient {
 
   public async updateTask(
     taskId: string,
-    updates: { title?: string; description?: string | null; due_date?: string | null },
+    updates: { title?: string; description?: string | null; due_date?: string | null; priority?: string | null; tags?: string[] | null },
   ): Promise<DoBeeDoTaskSummary> {
     const payload: Record<string, any> = {
       type: "dobeedo/update_task",
@@ -160,6 +176,12 @@ export class DoBeeDoApiClient {
     }
     if (updates.due_date !== undefined) {
       payload.due_date = updates.due_date;
+    }
+    if (updates.priority !== undefined) {
+      payload.priority = updates.priority;
+    }
+    if (updates.tags !== undefined) {
+      payload.tags = updates.tags;
     }
 
     const response = await this.connection.sendMessagePromise<{
@@ -286,5 +308,40 @@ export class DoBeeDoApiClient {
       console.debug("DoBeeDo: unsubscribe from subscribe_updates");
       unsubscribe();
     };
+  }
+
+  public async listTodoEntities(): Promise<TodoEntity[]> {
+    const response = await this.connection.sendMessagePromise<{
+      entities: TodoEntity[];
+    }>({
+      type: "dobeedo/list_todo_entities",
+    });
+
+    return response.entities ?? [];
+  }
+
+  public async importFromTodo(
+    entityId: string,
+    boardId: string,
+    columnId: string,
+    statusFilter?: string,
+  ): Promise<{ success: boolean; imported_count: number }> {
+    const payload: Record<string, any> = {
+      type: "dobeedo/import_from_todo",
+      entity_id: entityId,
+      board_id: boardId,
+      column_id: columnId,
+    };
+
+    if (statusFilter !== undefined) {
+      payload.status_filter = statusFilter;
+    }
+
+    const response = await this.connection.sendMessagePromise<{
+      success: boolean;
+      imported_count: number;
+    }>(payload);
+
+    return response;
   }
 }

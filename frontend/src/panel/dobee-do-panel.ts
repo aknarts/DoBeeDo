@@ -36,6 +36,12 @@ export class DoBeeDoPanel extends LitElement {
   private _newTaskDueDates: Record<string, string> = {};
 
   @state()
+  private _newTaskPriorities: Record<string, string> = {};
+
+  @state()
+  private _newTaskTags: Record<string, string> = {};
+
+  @state()
   private _newColumnName = "";
 
   @state()
@@ -63,7 +69,10 @@ export class DoBeeDoPanel extends LitElement {
   private _editTaskDueDate: string = "";
 
   @state()
-  private _movingTaskId: string | null = null;
+  private _editTaskPriority: string = "";
+
+  @state()
+  private _editTaskTags: string = "";
 
   @state()
   private _draggingTaskId: string | null = null;
@@ -73,6 +82,18 @@ export class DoBeeDoPanel extends LitElement {
 
   @state()
   private _dropIndicatorPosition: { columnId: string; index: number } | null = null;
+
+  @state()
+  private _importingColumnId: string | null = null;
+
+  @state()
+  private _todoEntities: any[] = [];
+
+  @state()
+  private _selectedTodoEntity: string | null = null;
+
+  @state()
+  private _importStatusFilter: string = "";
 
   static get styles(): CSSResultGroup {
     return css`
@@ -371,46 +392,106 @@ export class DoBeeDoPanel extends LitElement {
       }
 
       .column.drag-active {
-        border: 2px solid var(--primary-color);
+        border: 3px solid var(--primary-color);
         border-style: dashed;
-        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.05);
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.08);
+        box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color, 33, 150, 243), 0.2);
       }
 
       .column.drag-over {
-        border: 3px solid var(--primary-color);
+        border: 4px solid var(--primary-color);
         border-style: solid;
-        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.1);
-        box-shadow: 0 0 20px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.15);
+        box-shadow: 0 0 30px rgba(var(--rgb-primary-color, 33, 150, 243), 0.5),
+                    0 0 0 4px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
+        transform: scale(1.02);
+        transition: all 0.2s ease;
       }
 
       .tasks-list.drag-over {
-        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.15);
-        border: 2px dashed var(--primary-color);
+        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.2);
+        border: 3px dashed var(--primary-color);
         border-radius: 8px;
         min-height: 150px;
+        box-shadow: inset 0 0 20px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
       }
 
-      /* Drop indicator */
+      /* Drop indicator - more prominent */
       .drop-indicator {
-        height: 3px;
+        height: 4px;
         background: var(--primary-color);
-        margin: -6px 0;
-        border-radius: 2px;
-        box-shadow: 0 0 8px var(--primary-color);
+        margin: 8px 0;
+        border-radius: 3px;
+        box-shadow: 0 0 12px var(--primary-color),
+                    0 0 4px var(--primary-color);
         position: relative;
         z-index: 10;
+        animation: pulse-indicator 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse-indicator {
+        0%, 100% {
+          opacity: 1;
+          box-shadow: 0 0 12px var(--primary-color), 0 0 4px var(--primary-color);
+        }
+        50% {
+          opacity: 0.7;
+          box-shadow: 0 0 20px var(--primary-color), 0 0 8px var(--primary-color);
+        }
       }
 
       .drop-indicator::before {
         content: "";
         position: absolute;
-        left: -4px;
-        top: -3px;
-        width: 8px;
-        height: 8px;
+        left: -6px;
+        top: -4px;
+        width: 12px;
+        height: 12px;
         background: var(--primary-color);
         border-radius: 50%;
-        box-shadow: 0 0 4px var(--primary-color);
+        box-shadow: 0 0 8px var(--primary-color);
+      }
+
+      .drop-indicator::after {
+        content: "";
+        position: absolute;
+        right: -6px;
+        top: -4px;
+        width: 12px;
+        height: 12px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--primary-color);
+      }
+
+      /* Drop preview - ghost of the task */
+      .drop-preview {
+        background: var(--card-background-color);
+        border: 2px dashed var(--primary-color);
+        border-left: 4px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 12px;
+        margin: 8px 0;
+        opacity: 0.6;
+        box-shadow: 0 4px 16px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
+        animation: fade-in 0.2s ease;
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 0.6;
+          transform: scale(1);
+        }
+      }
+
+      .drop-preview-title {
+        font-weight: 500;
+        color: var(--primary-text-color);
+        opacity: 0.7;
       }
 
       .task-title {
@@ -445,6 +526,52 @@ export class DoBeeDoPanel extends LitElement {
 
       .task-card.overdue {
         border-left-color: var(--warning-color);
+      }
+
+      .task-priority {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: inline-block;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .task-priority.high {
+        background: rgba(244, 67, 54, 0.15);
+        color: #d32f2f;
+        border: 1px solid rgba(244, 67, 54, 0.3);
+      }
+
+      .task-priority.medium {
+        background: rgba(255, 152, 0, 0.15);
+        color: #f57c00;
+        border: 1px solid rgba(255, 152, 0, 0.3);
+      }
+
+      .task-priority.low {
+        background: rgba(33, 150, 243, 0.15);
+        color: #1976d2;
+        border: 1px solid rgba(33, 150, 243, 0.3);
+      }
+
+      .task-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+
+      .task-tag {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 12px;
+        background: rgba(156, 39, 176, 0.12);
+        color: #7b1fa2;
+        border: 1px solid rgba(156, 39, 176, 0.25);
       }
 
       .task-actions {
@@ -589,6 +716,49 @@ export class DoBeeDoPanel extends LitElement {
         gap: 8px;
         align-items: center;
       }
+
+      /* Import dialog */
+      .import-dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .import-dialog {
+        background: var(--card-background-color);
+        border-radius: var(--ha-card-border-radius, 12px);
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .import-dialog-title {
+        font-size: 20px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        color: var(--primary-text-color);
+      }
+
+      .import-dialog-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .import-dialog-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
     `;
   }
 
@@ -683,6 +853,8 @@ export class DoBeeDoPanel extends LitElement {
     const title = this._newTaskTitles[columnId] || "";
     const description = this._newTaskDescriptions[columnId] || "";
     const dueDate = this._newTaskDueDates[columnId] || "";
+    const priority = this._newTaskPriorities[columnId] || "";
+    const tagsStr = this._newTaskTags[columnId] || "";
 
     if (!this.hass || !this._selectedBoardId || !title.trim()) {
       return;
@@ -694,6 +866,12 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
+    // Parse tags from comma-separated string
+    const tags = tagsStr
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+
     try {
       await api.createTask(
         board.id,
@@ -701,14 +879,20 @@ export class DoBeeDoPanel extends LitElement {
         title.trim(),
         description.trim() || undefined,
         dueDate.trim() || undefined,
+        priority.trim() || undefined,
+        tags.length > 0 ? tags : undefined,
       );
       // Clear input for this column
       delete this._newTaskTitles[columnId];
       delete this._newTaskDescriptions[columnId];
       delete this._newTaskDueDates[columnId];
+      delete this._newTaskPriorities[columnId];
+      delete this._newTaskTags[columnId];
       this._newTaskTitles = { ...this._newTaskTitles };
       this._newTaskDescriptions = { ...this._newTaskDescriptions };
       this._newTaskDueDates = { ...this._newTaskDueDates };
+      this._newTaskPriorities = { ...this._newTaskPriorities };
+      this._newTaskTags = { ...this._newTaskTags };
 
       // WebSocket event will refresh the tasks automatically
     } catch (err) {
@@ -788,6 +972,8 @@ export class DoBeeDoPanel extends LitElement {
     this._editTaskTitle = task.title;
     this._editTaskDescription = task.description ?? "";
     this._editTaskDueDate = task.due_date ?? "";
+    this._editTaskPriority = task.priority ?? "";
+    this._editTaskTags = task.tags ? task.tags.join(", ") : "";
   }
 
   private _cancelEditTask(): void {
@@ -795,6 +981,8 @@ export class DoBeeDoPanel extends LitElement {
     this._editTaskTitle = "";
     this._editTaskDescription = "";
     this._editTaskDueDate = "";
+    this._editTaskPriority = "";
+    this._editTaskTags = "";
   }
 
   private async _saveEditTask(): Promise<void> {
@@ -812,7 +1000,7 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    const updates: { title?: string; description?: string | null; due_date?: string | null } = {};
+    const updates: { title?: string; description?: string | null; due_date?: string | null; priority?: string | null; tags?: string[] | null } = {};
 
     if (trimmedTitle !== task.title) {
       updates.title = trimmedTitle;
@@ -828,7 +1016,25 @@ export class DoBeeDoPanel extends LitElement {
       updates.due_date = trimmedDueDate === "" ? null : trimmedDueDate;
     }
 
-    if (!updates.title && updates.description === undefined && updates.due_date === undefined) {
+    const trimmedPriority = this._editTaskPriority.trim();
+    if (trimmedPriority !== (task.priority ?? "")) {
+      updates.priority = trimmedPriority === "" ? null : trimmedPriority;
+    }
+
+    // Parse tags from comma-separated string
+    const tagsStr = this._editTaskTags.trim();
+    const newTags = tagsStr
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0);
+    const currentTags = task.tags || [];
+    const tagsChanged =
+      newTags.length !== currentTags.length || newTags.some((tag, i) => tag !== currentTags[i]);
+    if (tagsChanged) {
+      updates.tags = newTags.length > 0 ? newTags : null;
+    }
+
+    if (!updates.title && updates.description === undefined && updates.due_date === undefined && updates.priority === undefined && updates.tags === undefined) {
       this._cancelEditTask();
       return;
     }
@@ -841,31 +1047,6 @@ export class DoBeeDoPanel extends LitElement {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to update DoBeeDo task", err);
-    }
-  }
-
-  private _startMoveTask(task: DoBeeDoTaskSummary): void {
-    this._movingTaskId = task.id;
-  }
-
-  private _cancelMoveTask(): void {
-    this._movingTaskId = null;
-  }
-
-  private async _handleMoveTask(task: DoBeeDoTaskSummary, targetColumnId: string): Promise<void> {
-    if (!this.hass || targetColumnId === task.column_id) {
-      this._cancelMoveTask();
-      return;
-    }
-
-    const api = new DoBeeDoApiClient(this.hass.connection);
-    try {
-      await api.moveTask(task.id, targetColumnId);
-      this._cancelMoveTask();
-      // WebSocket event will refresh the task automatically
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to move DoBeeDo task", err);
     }
   }
 
@@ -899,11 +1080,18 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     const tasksListEl = ev.currentTarget as HTMLElement;
-    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
+    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging):not(.drop-preview)"));
     const mouseY = ev.clientY;
+
+    // If there are no tasks, drop at position 0
+    if (taskElements.length === 0) {
+      this._dropIndicatorPosition = { columnId, index: 0 };
+      return;
+    }
 
     let dropIndex = taskElements.length; // Default to end
 
+    // Find the insertion point based on mouse position
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
       const middle = rect.top + rect.height / 2;
@@ -914,16 +1102,30 @@ export class DoBeeDoPanel extends LitElement {
       }
     }
 
-    this._dropIndicatorPosition = { columnId, index: dropIndex };
+    // Only update if the position actually changed (reduces flickering)
+    if (
+      !this._dropIndicatorPosition ||
+      this._dropIndicatorPosition.columnId !== columnId ||
+      this._dropIndicatorPosition.index !== dropIndex
+    ) {
+      this._dropIndicatorPosition = { columnId, index: dropIndex };
+    }
   }
 
-  private _handleDragEnterColumn(columnId: string): void {
+  private _handleDragEnterColumn(columnId: string, ev: DragEvent): void {
+    ev.stopPropagation();
     this._dragOverColumnId = columnId;
   }
 
-  private _handleDragLeaveColumn(): void {
-    this._dragOverColumnId = null;
-    this._dropIndicatorPosition = null;
+  private _handleDragLeaveColumn(ev: DragEvent): void {
+    // Only clear if we're actually leaving the column element itself
+    const currentTarget = ev.currentTarget as HTMLElement;
+    const relatedTarget = ev.relatedTarget as Node;
+
+    if (!relatedTarget || !currentTarget.contains(relatedTarget)) {
+      this._dragOverColumnId = null;
+      this._dropIndicatorPosition = null;
+    }
   }
 
   private _isTaskOverdue(task: DoBeeDoTaskSummary): boolean {
@@ -1060,6 +1262,58 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _startImport(columnId: string): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      this._todoEntities = await api.listTodoEntities();
+      this._importingColumnId = columnId;
+      this._selectedTodoEntity = null;
+      this._importStatusFilter = "";
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to load todo entities", err);
+    }
+  }
+
+  private _cancelImport(): void {
+    this._importingColumnId = null;
+    this._todoEntities = [];
+    this._selectedTodoEntity = null;
+    this._importStatusFilter = "";
+  }
+
+  private async _handleImport(): Promise<void> {
+    if (!this.hass || !this._selectedTodoEntity || !this._importingColumnId || !this._selectedBoardId) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      const result = await api.importFromTodo(
+        this._selectedTodoEntity,
+        this._selectedBoardId,
+        this._importingColumnId,
+        this._importStatusFilter || undefined,
+      );
+
+      // Show success message
+      alert(`Successfully imported ${result.imported_count} task${result.imported_count === 1 ? "" : "s"}!`);
+
+      // Close dialog
+      this._cancelImport();
+
+      // WebSocket event will refresh the tasks automatically
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to import from todo", err);
+      alert("Failed to import tasks. See console for details.");
+    }
+  }
+
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._unsubscribeUpdates) {
@@ -1072,6 +1326,7 @@ export class DoBeeDoPanel extends LitElement {
     return html`
       <h1>DoBeeDo</h1>
       ${this._loading ? html`<p>Loading boards…</p>` : this._renderContent()}
+      ${this._importingColumnId ? this._renderImportDialog() : ""}
     `;
   }
 
@@ -1243,8 +1498,8 @@ export class DoBeeDoPanel extends LitElement {
       <div
         class="column ${isDragActive ? "drag-active" : ""} ${isDragOver ? "drag-over" : ""}"
         @dragover=${this._handleDragOver}
-        @dragenter=${() => this._handleDragEnterColumn(column.id)}
-        @dragleave=${this._handleDragLeaveColumn}
+        @dragenter=${(ev: DragEvent) => this._handleDragEnterColumn(column.id, ev)}
+        @dragleave=${(ev: DragEvent) => this._handleDragLeaveColumn(ev)}
         @drop=${(ev: DragEvent) => this._handleDrop(column.id, ev)}
       >
         <div class="column-header">
@@ -1252,13 +1507,22 @@ export class DoBeeDoPanel extends LitElement {
             <span>${column.name}</span>
             <span class="task-count">${tasksForColumn.length}</span>
           </div>
-          <button
-            class="warning small"
-            @click=${() => this._handleDeleteColumn(column)}
-            title="Delete column"
-          >
-            ×
-          </button>
+          <div style="display: flex; gap: 4px;">
+            <button
+              class="secondary small"
+              @click=${() => this._startImport(column.id)}
+              title="Import from To-do list"
+            >
+              ↓
+            </button>
+            <button
+              class="warning small"
+              @click=${() => this._handleDeleteColumn(column)}
+              title="Delete column"
+            >
+              ×
+            </button>
+          </div>
         </div>
         <div
           class="tasks-list ${isDragOver ? "drag-over" : ""}"
@@ -1269,7 +1533,7 @@ export class DoBeeDoPanel extends LitElement {
             ? html`
                 ${this._dropIndicatorPosition?.columnId === column.id &&
                 this._dropIndicatorPosition?.index === 0
-                  ? html`<div class="drop-indicator"></div>`
+                  ? this._renderDropPreview()
                   : ""}
                 <div class="empty-state" style="padding: 16px; font-size: 13px;">
                   No tasks yet
@@ -1279,13 +1543,13 @@ export class DoBeeDoPanel extends LitElement {
                 return html`
                   ${this._dropIndicatorPosition?.columnId === column.id &&
                   this._dropIndicatorPosition?.index === index
-                    ? html`<div class="drop-indicator"></div>`
+                    ? this._renderDropPreview()
                     : ""}
                   ${this._renderTask(task)}
                   ${this._dropIndicatorPosition?.columnId === column.id &&
                   this._dropIndicatorPosition?.index === index + 1 &&
                   index === tasksForColumn.length - 1
-                    ? html`<div class="drop-indicator"></div>`
+                    ? this._renderDropPreview()
                     : ""}
                 `;
               })}
@@ -1346,6 +1610,40 @@ export class DoBeeDoPanel extends LitElement {
                       }
                     }}
                   />
+                  <select
+                    class="add-task-input"
+                    .value=${this._newTaskPriorities[column.id] || ""}
+                    @change=${(ev: Event) => {
+                      const target = ev.target as HTMLSelectElement;
+                      this._newTaskPriorities = {
+                        ...this._newTaskPriorities,
+                        [column.id]: target.value,
+                      };
+                    }}
+                  >
+                    <option value="">No priority</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                  <input
+                    type="text"
+                    class="add-task-input"
+                    .value=${this._newTaskTags[column.id] || ""}
+                    placeholder="Tags (comma-separated, optional)"
+                    @input=${(ev: Event) => {
+                      const target = ev.target as HTMLInputElement;
+                      this._newTaskTags = {
+                        ...this._newTaskTags,
+                        [column.id]: target.value,
+                      };
+                    }}
+                    @keydown=${(ev: KeyboardEvent) => {
+                      if (ev.key === "Enter") {
+                        void this._handleCreateTask(column.id);
+                      }
+                    }}
+                  />
                   <div class="add-task-buttons">
                     <button class="primary small" @click=${() => this._handleCreateTask(column.id)}>
                       Add
@@ -1356,9 +1654,13 @@ export class DoBeeDoPanel extends LitElement {
                         delete this._newTaskTitles[column.id];
                         delete this._newTaskDescriptions[column.id];
                         delete this._newTaskDueDates[column.id];
+                        delete this._newTaskPriorities[column.id];
+                        delete this._newTaskTags[column.id];
                         this._newTaskTitles = { ...this._newTaskTitles };
                         this._newTaskDescriptions = { ...this._newTaskDescriptions };
                         this._newTaskDueDates = { ...this._newTaskDueDates };
+                        this._newTaskPriorities = { ...this._newTaskPriorities };
+                        this._newTaskTags = { ...this._newTaskTags };
                       }}
                     >
                       Cancel
@@ -1374,7 +1676,6 @@ export class DoBeeDoPanel extends LitElement {
 
   private _renderTask(task: DoBeeDoTaskSummary): TemplateResult {
     const isEditing = this._editingTaskId === task.id;
-    const isMoving = this._movingTaskId === task.id;
 
     if (isEditing) {
       return html`
@@ -1408,6 +1709,29 @@ export class DoBeeDoPanel extends LitElement {
                 const target = ev.target as HTMLInputElement;
                 this._editTaskDueDate = target.value;
               }}
+              style="width: 100%; margin-bottom: 8px;"
+            />
+            <select
+              .value=${this._editTaskPriority}
+              @change=${(ev: Event) => {
+                const target = ev.target as HTMLSelectElement;
+                this._editTaskPriority = target.value;
+              }}
+              style="width: 100%; margin-bottom: 8px;"
+            >
+              <option value="">No priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <input
+              type="text"
+              .value=${this._editTaskTags}
+              placeholder="Tags (comma-separated, optional)"
+              @input=${(ev: Event) => {
+                const target = ev.target as HTMLInputElement;
+                this._editTaskTags = target.value;
+              }}
               style="width: 100%;"
             />
           </div>
@@ -1415,34 +1739,6 @@ export class DoBeeDoPanel extends LitElement {
             <button class="primary small" @click=${() => this._saveEditTask()}>Save</button>
             <button class="secondary small" @click=${() => this._cancelEditTask()}>Cancel</button>
           </div>
-        </div>
-      `;
-    }
-
-    if (isMoving) {
-      return html`
-        <div class="task-card" style="padding: 16px;">
-          <div class="task-title" style="margin-bottom: 8px;">${task.title}</div>
-          <div style="font-size: 12px; margin-bottom: 8px; color: var(--secondary-text-color);">
-            Move to column:
-          </div>
-          <select
-            style="width: 100%; margin-bottom: 8px;"
-            @change=${(ev: Event) => {
-              const target = ev.target as HTMLSelectElement;
-              void this._handleMoveTask(task, target.value);
-            }}
-          >
-            <option value="">-- Select column --</option>
-            ${this._columns.map(
-              (col) => html`
-                <option value=${col.id} ?selected=${col.id === task.column_id}>
-                  ${col.name} ${col.id === task.column_id ? "(current)" : ""}
-                </option>
-              `,
-            )}
-          </select>
-          <button class="secondary small" @click=${() => this._cancelMoveTask()}>Cancel</button>
         </div>
       `;
     }
@@ -1459,6 +1755,14 @@ export class DoBeeDoPanel extends LitElement {
       >
         <div class="task-title">${task.title}</div>
         ${task.description ? html`<div class="task-description">${task.description}</div>` : ""}
+        ${task.priority
+          ? html`<div class="task-priority ${task.priority}">${task.priority}</div>`
+          : ""}
+        ${task.tags && task.tags.length > 0
+          ? html`<div class="task-tags">
+              ${task.tags.map((tag) => html`<span class="task-tag">${tag}</span>`)}
+            </div>`
+          : ""}
         ${task.due_date
           ? html`<div class="task-due-date ${isOverdue ? "overdue" : ""}">
               📅 ${this._formatDueDate(task.due_date)}
@@ -1466,8 +1770,89 @@ export class DoBeeDoPanel extends LitElement {
           : ""}
         <div class="task-actions">
           <button class="secondary small" @click=${() => this._startEditTask(task)}>Edit</button>
-          <button class="secondary small" @click=${() => this._startMoveTask(task)}>Move</button>
           <button class="warning small" @click=${() => this._handleDeleteTask(task)}>Delete</button>
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderDropPreview(): TemplateResult {
+    if (!this._draggingTaskId) {
+      return html``;
+    }
+
+    const draggingTask = this._tasks.find((t) => t.id === this._draggingTaskId);
+    if (!draggingTask) {
+      return html``;
+    }
+
+    return html`
+      <div class="drop-preview">
+        <div class="drop-preview-title">${draggingTask.title}</div>
+        ${draggingTask.priority
+          ? html`<div class="task-priority ${draggingTask.priority}">${draggingTask.priority}</div>`
+          : ""}
+      </div>
+    `;
+  }
+
+  private _renderImportDialog(): TemplateResult {
+    const column = this._columns.find((col) => col.id === this._importingColumnId);
+    const columnName = column?.name || "Unknown";
+
+    return html`
+      <div class="import-dialog-overlay" @click=${this._cancelImport}>
+        <div class="import-dialog" @click=${(ev: Event) => ev.stopPropagation()}>
+          <div class="import-dialog-title">Import from To-do List to "${columnName}"</div>
+          <div class="import-dialog-content">
+            ${this._todoEntities.length === 0
+              ? html`<p style="color: var(--secondary-text-color);">No to-do lists found in Home Assistant.</p>`
+              : html`
+                  <div>
+                    <label class="form-label">Select To-do List</label>
+                    <select
+                      style="width: 100%;"
+                      .value=${this._selectedTodoEntity || ""}
+                      @change=${(ev: Event) => {
+                        const target = ev.target as HTMLSelectElement;
+                        this._selectedTodoEntity = target.value;
+                      }}
+                    >
+                      <option value="">-- Select a to-do list --</option>
+                      ${this._todoEntities.map(
+                        (entity) => html`
+                          <option value=${entity.entity_id}>${entity.name}</option>
+                        `,
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Status Filter (optional)</label>
+                    <select
+                      style="width: 100%;"
+                      .value=${this._importStatusFilter}
+                      @change=${(ev: Event) => {
+                        const target = ev.target as HTMLSelectElement;
+                        this._importStatusFilter = target.value;
+                      }}
+                    >
+                      <option value="">All items</option>
+                      <option value="needs_action">Not completed</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                `}
+          </div>
+          <div class="import-dialog-actions">
+            <button class="secondary small" @click=${this._cancelImport}>Cancel</button>
+            <button
+              class="primary small"
+              @click=${() => this._handleImport()}
+              ?disabled=${!this._selectedTodoEntity}
+            >
+              Import
+            </button>
+          </div>
         </div>
       </div>
     `;

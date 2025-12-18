@@ -104,17 +104,21 @@ class DobeeDoManager:
         # Populate backlog
         await self.async_create_task(
             board.id, backlog.id, "Research user requirements",
-            "Gather feedback from users about needed features"
+            "Gather feedback from users about needed features",
+            priority="low",
+            tags=["research", "user-feedback"]
         )
         await self.async_create_task(
             board.id, backlog.id, "Design new dashboard",
-            "Create mockups for the analytics dashboard"
+            "Create mockups for the analytics dashboard",
+            tags=["design", "ui"]
         )
 
         # Populate to-do
         await self.async_create_task(
             board.id, todo.id, "Set up development environment",
-            "Install dependencies and configure dev tools"
+            "Install dependencies and configure dev tools",
+            priority="medium"
         )
         await self.async_create_task(
             board.id, todo.id, "Write API documentation",
@@ -124,7 +128,8 @@ class DobeeDoManager:
         # Populate in-progress
         await self.async_create_task(
             board.id, in_progress.id, "Implement user authentication",
-            "Add login and registration endpoints"
+            "Add login and registration endpoints",
+            priority="high"
         )
         await self.async_create_task(
             board.id, in_progress.id, "Create database schema",
@@ -348,6 +353,8 @@ class DobeeDoManager:
         description: str | None = None,
         sort_index: int | None = None,
         due_date: str | None = None,
+        priority: str | None = None,
+        tags: list[str] | None = None,
     ) -> Task:
         """Create a new task in a column."""
 
@@ -375,6 +382,8 @@ class DobeeDoManager:
             description=description,
             sort_index=sort_index,
             due_date=due_date,
+            priority=priority,
+            tags=tags,
         )
         self._tasks[task_id] = task
 
@@ -398,6 +407,10 @@ class DobeeDoManager:
             task.description = updates["description"]
         if "due_date" in updates:
             task.due_date = updates["due_date"]
+        if "priority" in updates:
+            task.priority = updates["priority"]
+        if "tags" in updates:
+            task.tags = updates["tags"]
 
         self._fire_event(EVENT_TASK_UPDATED, {"task": task.to_dict()})
         await self.async_save_to_storage()

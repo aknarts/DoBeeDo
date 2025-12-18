@@ -77,11 +77,17 @@ class Task:
     description: Optional[str] = None
     sort_index: int = 0
     due_date: Optional[str] = None
+    priority: Optional[str] = None
+    tags: List[str] | None = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize the task to a dictionary."""
 
-        return asdict(self)
+        data = asdict(self)
+        # Normalise None tags to empty list for storage/transport.
+        if data.get("tags") is None:
+            data["tags"] = []
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Task":
@@ -95,6 +101,8 @@ class Task:
             description=data.get("description"),
             sort_index=int(data.get("sort_index", 0)),
             due_date=data.get("due_date"),
+            priority=data.get("priority"),
+            tags=list(data.get("tags", [])) if data.get("tags") else None,
         )
 
 

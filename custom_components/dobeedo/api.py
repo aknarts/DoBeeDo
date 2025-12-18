@@ -166,6 +166,8 @@ async def websocket_get_columns(
         Optional("description"): VAny(str, None),
         Optional("sort_index"): Coerce(int),
         Optional("due_date"): VAny(str, None),
+        Optional("priority"): VAny(str, None),
+        Optional("tags"): list,
         # Optional fields may be omitted.
     }
 )
@@ -176,7 +178,7 @@ async def websocket_create_task(
     """Create a new task on a board.
 
     Required fields: ``board_id``, ``column_id``, ``title``.
-    Optional fields: ``description``, ``sort_index``, ``due_date``.
+    Optional fields: ``description``, ``sort_index``, ``due_date``, ``priority``, ``tags``.
     """
 
     manager = _get_manager(hass)
@@ -192,6 +194,8 @@ async def websocket_create_task(
             description=msg.get("description"),
             sort_index=msg.get("sort_index"),
             due_date=msg.get("due_date"),
+            priority=msg.get("priority"),
+            tags=msg.get("tags"),
         )
     except KeyError as err:
         connection.send_error(msg["id"], "not_found", f"Unknown id: {err}")
@@ -207,6 +211,8 @@ async def websocket_create_task(
         Optional("title"): str,
         Optional("description"): VAny(str, None),
         Optional("due_date"): VAny(str, None),
+        Optional("priority"): VAny(str, None),
+        Optional("tags"): VAny(list, None),
     }
 )
 @websocket_api.async_response
@@ -216,7 +222,7 @@ async def websocket_update_task(
     """Update an existing task.
 
     Required fields: ``task_id``.
-    Optional fields: ``title``, ``description``, ``due_date``.
+    Optional fields: ``title``, ``description``, ``due_date``, ``priority``, ``tags``.
     """
 
     manager = _get_manager(hass)
@@ -231,6 +237,10 @@ async def websocket_update_task(
         updates["description"] = msg["description"]
     if "due_date" in msg:
         updates["due_date"] = msg["due_date"]
+    if "priority" in msg:
+        updates["priority"] = msg["priority"]
+    if "tags" in msg:
+        updates["tags"] = msg["tags"]
 
     try:
         task = await manager.async_update_task(msg["task_id"], **updates)
@@ -458,6 +468,106 @@ async def websocket_subscribe_updates(
     connection.send_result(msg["id"], {"success": True})
 
 
+@websocket_api.websocket_command({
+    "type": f"{DOMAIN}/list_todo_entities",
+})
+@websocket_api.async_response
+async def websocket_list_todo_entities(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """List all available todo entities in Home Assistant.
+
+    Returns a list of todo entities with their friendly names and IDs.
+    """
+    todo_entities = []
+
+    # Get all todo entities from state registry
+    for state in hass.states.async_all("todo"):
+        todo_entities.append({
+            "entity_id": state.entity_id,
+            "name": state.attributes.get("friendly_name", state.entity_id),
+            "state": state.state,
+        })
+
+    connection.send_result(msg["id"], {"entities": todo_entities})
+
+
+@websocket_api.websocket_command({
+    "type": f"{DOMAIN}/import_from_todo",
+    "entity_id": str,
+    "board_id": str,
+    "column_id": str,
+    Optional("status_filter"): str,  # "needs_action", "completed", or None for all
+})
+@websocket_api.async_response
+async def websocket_import_from_todo(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Import items from a Home Assistant todo entity into a DoBeeDo column.
+
+    Required fields: ``entity_id``, ``board_id``, ``column_id``.
+    Optional fields: ``status_filter``.
+    """
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    entity_id = msg["entity_id"]
+    board_id = msg["board_id"]
+    column_id = msg["column_id"]
+    status_filter = msg.get("status_filter")
+
+    # Verify the todo entity exists
+    if not hass.states.get(entity_id):
+        connection.send_error(msg["id"], "entity_not_found", f"Todo entity {entity_id} not found")
+        return
+
+    try:
+        # Call the todo.get_items service to fetch items
+        response = await hass.services.async_call(
+            "todo",
+            "get_items",
+            {"entity_id": entity_id},
+            blocking=True,
+            return_response=True,
+        )
+
+        items = response.get(entity_id, {}).get("items", [])
+
+        # Filter by status if requested
+        if status_filter:
+            items = [item for item in items if item.get("status") == status_filter]
+
+        # Import each item as a task
+        imported_count = 0
+        for item in items:
+            summary = item.get("summary", "")
+            if not summary:
+                continue
+
+            description = item.get("description")
+            due_date = item.get("due")
+
+            await manager.async_create_task(
+                board_id,
+                column_id,
+                summary,
+                description=description,
+                due_date=due_date,
+            )
+            imported_count += 1
+
+        connection.send_result(msg["id"], {
+            "success": True,
+            "imported_count": imported_count,
+        })
+
+    except Exception as err:
+        connection.send_error(msg["id"], "import_failed", str(err))
+        return
+
+
 def async_register_api(hass: HomeAssistant) -> None:
     """Register DoBeeDo WebSocket commands with Home Assistant."""
 
@@ -473,3 +583,5 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_delete_column)
     websocket_api.async_register_command(hass, websocket_delete_board)
     websocket_api.async_register_command(hass, websocket_subscribe_updates)
+    websocket_api.async_register_command(hass, websocket_list_todo_entities)
+    websocket_api.async_register_command(hass, websocket_import_from_todo)
