@@ -398,11 +398,8 @@ export class DoBeeDoPanel extends LitElement {
       }
 
       .task-card.dragging {
-        /* Temporarily disable all styling to test if CSS is causing drag to cancel */
-        /* opacity: 0.3; */
-        /* cursor: grabbing; */
-        /* transform: rotate(2deg); */
-        border: 3px solid red !important;  /* Just to see if it's being applied */
+        opacity: 0.5;
+        cursor: grabbing;
       }
 
       .column.drag-active {
@@ -1016,31 +1013,27 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _handleDragStart(task: DoBeeDoTaskSummary, ev: DragEvent): void {
-    console.log("Desktop drag start:", task.id);
     if (ev.dataTransfer) {
       ev.dataTransfer.effectAllowed = "move";
       ev.dataTransfer.setData("text/plain", task.id);
-      // Set a transparent drag image to test
+      // Set a transparent drag image for cleaner appearance
       const img = new Image();
       img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
       ev.dataTransfer.setDragImage(img, 0, 0);
     }
-    // Defer state update to avoid interfering with drag start
+    // Defer state update to avoid re-render interfering with drag initialization
     requestAnimationFrame(() => {
       this._draggingTaskId = task.id;
-      console.log("Set _draggingTaskId to:", this._draggingTaskId);
     });
   }
 
   private _handleDragEnd(): void {
-    console.log("Drag end fired for task:", this._draggingTaskId);
     this._draggingTaskId = null;
     this._dragOverColumnId = null;
     this._dropIndicatorPosition = null;
   }
 
   private _handleTouchStart(task: DoBeeDoTaskSummary, ev: TouchEvent): void {
-    console.log("Touch drag start:", task.id);
     // Prevent default to avoid scrolling while dragging
     ev.preventDefault();
 
@@ -1049,23 +1042,19 @@ export class DoBeeDoPanel extends LitElement {
     this._touchCurrentY = touch.clientY;
     this._touchDragging = true;
     this._draggingTaskId = task.id;
-    console.log("Set _draggingTaskId to:", this._draggingTaskId, "_touchDragging:", this._touchDragging);
 
     // Add global listeners now that drag has started
     this._boundTouchMove = this._handleTouchMove.bind(this);
     this._boundTouchEnd = this._handleTouchEnd.bind(this);
     document.addEventListener('touchmove', this._boundTouchMove, { passive: false });
     document.addEventListener('touchend', this._boundTouchEnd, { passive: false });
-    console.log("Added touch listeners to document");
   }
 
   private _handleTouchMove(ev: TouchEvent): void {
     if (!this._touchDragging || !this._draggingTaskId) {
-      console.log("Touch move skipped - dragging:", this._touchDragging, "taskId:", this._draggingTaskId);
       return;
     }
 
-    console.log("Touch move:", ev.touches[0].clientY);
     ev.preventDefault();
     const touch = ev.touches[0];
     this._touchCurrentY = touch.clientY;
@@ -1205,7 +1194,6 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _handleDragOver(ev: DragEvent): void {
-    console.log("Drag over fired, draggingTaskId:", this._draggingTaskId);
     ev.preventDefault();
     if (ev.dataTransfer) {
       ev.dataTransfer.dropEffect = "move";
@@ -1991,10 +1979,6 @@ export class DoBeeDoPanel extends LitElement {
 
     const isDragging = this._draggingTaskId === task.id;
     const isOverdue = this._isTaskOverdue(task);
-
-    if (isDragging) {
-      console.log("Rendering task", task.id, "as DRAGGING");
-    }
 
     return html`
       <div
