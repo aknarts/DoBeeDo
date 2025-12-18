@@ -23,6 +23,7 @@ from .const import (
     EVENT_TASK_MOVED,
     EVENT_TASK_UPDATED,
     EVENT_COLUMN_CREATED,
+    EVENT_COLUMN_DELETED,
 )
 from .coordinator import DobeeDoManager
 
@@ -238,6 +239,35 @@ async def websocket_move_task(
 
 @websocket_api.websocket_command(
     {
+        "type": f"{DOMAIN}/delete_task",
+        "task_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_delete_task(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Delete an existing task.
+
+    Required fields: ``task_id``.
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    try:
+        await manager.async_delete_task(msg["task_id"])
+    except KeyError as err:
+        connection.send_error(msg["id"], "not_found", f"Unknown id: {err}")
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@websocket_api.websocket_command(
+    {
         "type": f"{DOMAIN}/create_column",
         "board_id": str,
         "name": str,
@@ -270,6 +300,64 @@ async def websocket_create_column(
         return
 
     connection.send_result(msg["id"], {"column": column.to_dict()})
+
+
+@websocket_api.websocket_command(
+    {
+        "type": f"{DOMAIN}/delete_column",
+        "column_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_delete_column(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Delete a column and all tasks within it.
+
+    Required fields: ``column_id``.
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    try:
+        await manager.async_delete_column(msg["column_id"])
+    except KeyError as err:
+        connection.send_error(msg["id"], "not_found", f"Unknown id: {err}")
+        return
+
+    connection.send_result(msg["id"], {"success": True})
+
+
+@websocket_api.websocket_command(
+    {
+        "type": f"{DOMAIN}/delete_board",
+        "board_id": str,
+    }
+)
+@websocket_api.async_response
+async def websocket_delete_board(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Delete a board and all of its columns and tasks.
+
+    Required fields: ``board_id``.
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    try:
+        await manager.async_delete_board(msg["board_id"])
+    except KeyError as err:
+        connection.send_error(msg["id"], "not_found", f"Unknown id: {err}")
+        return
+
+    connection.send_result(msg["id"], {"success": True})
 
 
 @websocket_api.websocket_command({"type": f"{DOMAIN}/subscribe_updates"})
@@ -362,5 +450,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_create_task)
     websocket_api.async_register_command(hass, websocket_update_task)
     websocket_api.async_register_command(hass, websocket_move_task)
+    websocket_api.async_register_command(hass, websocket_delete_task)
+    websocket_api.async_register_command(hass, websocket_delete_column)
+    websocket_api.async_register_command(hass, websocket_delete_board)
     websocket_api.async_register_command(hass, websocket_subscribe_updates)
     websocket_api.async_register_command(hass, websocket_populate_test_data)

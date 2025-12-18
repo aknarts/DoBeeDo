@@ -161,6 +161,27 @@ export class DoBeeDoApiClient {
     return response.task;
   }
 
+  public async deleteTask(taskId: string): Promise<void> {
+    await this.connection.sendMessagePromise<{ success: boolean }>({
+      type: "dobeedo/delete_task",
+      task_id: taskId,
+    });
+  }
+
+  public async deleteColumn(columnId: string): Promise<void> {
+    await this.connection.sendMessagePromise<{ success: boolean }>({
+      type: "dobeedo/delete_column",
+      column_id: columnId,
+    });
+  }
+
+  public async deleteBoard(boardId: string): Promise<void> {
+    await this.connection.sendMessagePromise<{ success: boolean }>({
+      type: "dobeedo/delete_board",
+      board_id: boardId,
+    });
+  }
+
   public subscribeUpdates(
     onEvent: (event: DoBeeDoEventMessage) => void,
   ): () => void {

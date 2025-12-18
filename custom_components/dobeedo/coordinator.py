@@ -20,6 +20,7 @@ from .const import (
     EVENT_TASK_MOVED,
     EVENT_TASK_UPDATED,
     EVENT_COLUMN_CREATED,
+    EVENT_COLUMN_DELETED,
 )
 from .model import Board, Column, Task
 from .storage import DobeeDoStorage, deserialize_model, serialize_model
@@ -297,6 +298,25 @@ class DobeeDoManager:
         await self.async_save_to_storage()
 
         return column
+
+    async def async_delete_column(self, column_id: str) -> None:
+        """Delete a column and all tasks within it."""
+
+        column = self._columns.pop(column_id)
+        board = self._boards.get(column.board_id)
+
+        # Remove from board's column_ids list
+        if board and board.column_ids and column_id in board.column_ids:
+            board.column_ids.remove(column_id)
+            await self._reindex_columns(column.board_id)
+
+        # Remove all tasks in this column
+        task_ids = [tid for tid, task in self._tasks.items() if task.column_id == column_id]
+        for tid in task_ids:
+            self._tasks.pop(tid, None)
+
+        self._fire_event(EVENT_COLUMN_DELETED, {"column": column.to_dict()})
+        await self.async_save_to_storage()
 
     async def _reindex_columns(self, board_id: str) -> None:
         """Ensure column ``order_index`` values are contiguous for a board."""

@@ -195,6 +195,12 @@ export class DoBeeDoPanel extends LitElement {
         align-items: center;
       }
 
+      .column-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
       .task-count {
         font-size: 12px;
         font-weight: 400;
@@ -334,6 +340,8 @@ export class DoBeeDoPanel extends LitElement {
               void this._refreshColumnsAndTasks();
             }
           } else if (evt.event_type.startsWith("board_")) {
+            // eslint-disable-next-line no-console
+            console.debug("DoBeeDo board event");
             void this._fetchBoards();
           }
         });
@@ -536,6 +544,53 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _handleDeleteTask(task: DoBeeDoTaskSummary): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    if (!window.confirm(`Delete task "${task.title}"?`)) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      await api.deleteTask(task.id);
+      this._tasks = this._tasks.filter((t) => t.id !== task.id);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to delete DoBeeDo task", err);
+    }
+  }
+
+  private async _handleDeleteColumn(column: DoBeeDoColumnSummary): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    const tasksInColumn = this._tasks.filter((t) => t.column_id === column.id);
+    const taskCount = tasksInColumn.length;
+
+    const message =
+      taskCount > 0
+        ? `Delete column "${column.name}" and ${taskCount} task${taskCount === 1 ? "" : "s"}?`
+        : `Delete column "${column.name}"?`;
+
+    if (!window.confirm(message)) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      await api.deleteColumn(column.id);
+      this._columns = this._columns.filter((c) => c.id !== column.id);
+      this._tasks = this._tasks.filter((t) => t.column_id !== column.id);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to delete DoBeeDo column", err);
+    }
+  }
+
   // TODO: REMOVE BEFORE RELEASE - Development helper only!
   private async _handlePopulateTestData(): Promise<void> {
     if (!this.hass) {
@@ -723,8 +778,17 @@ export class DoBeeDoPanel extends LitElement {
     return html`
       <div class="column">
         <div class="column-header">
-          <span>${column.name}</span>
-          <span class="task-count">${tasksForColumn.length}</span>
+          <div class="column-header-left">
+            <span>${column.name}</span>
+            <span class="task-count">${tasksForColumn.length}</span>
+          </div>
+          <button
+            class="warning small"
+            @click=${() => this._handleDeleteColumn(column)}
+            title="Delete column"
+          >
+            ×
+          </button>
         </div>
         <div class="tasks-list">
           ${tasksForColumn.length === 0
@@ -809,6 +873,7 @@ export class DoBeeDoPanel extends LitElement {
         <div class="task-actions">
           <button class="secondary small" @click=${() => this._startEditTask(task)}>Edit</button>
           <button class="secondary small" @click=${() => this._startMoveTask(task)}>Move</button>
+          <button class="warning small" @click=${() => this._handleDeleteTask(task)}>Delete</button>
         </div>
       </div>
     `;
