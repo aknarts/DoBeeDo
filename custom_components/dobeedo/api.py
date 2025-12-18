@@ -246,6 +246,7 @@ async def websocket_update_task(
         "type": f"{DOMAIN}/move_task",
         "task_id": str,
         "target_column_id": str,
+        Optional("target_sort_index"): Coerce(int),
     }
 )
 @websocket_api.async_response
