@@ -782,16 +782,33 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    // If dropped in the same column, don't do anything for now
-    // TODO: Implement reordering within the same column
-    if (columnId === task.column_id) {
-      this._draggingTaskId = null;
-      return;
+    // Calculate target sort index based on drop position
+    const tasksInColumn = this._tasks
+      .filter((t) => t.column_id === columnId && t.id !== this._draggingTaskId)
+      .sort((a, b) => a.sort_index - b.sort_index);
+
+    let targetIndex = tasksInColumn.length; // Default to end
+
+    // Find the task element we're hovering over
+    const tasksListEl = (ev.currentTarget as HTMLElement).querySelector(".tasks-list");
+    if (tasksListEl) {
+      const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
+      const mouseY = ev.clientY;
+
+      for (let i = 0; i < taskElements.length; i++) {
+        const rect = taskElements[i].getBoundingClientRect();
+        const middle = rect.top + rect.height / 2;
+
+        if (mouseY < middle) {
+          targetIndex = i;
+          break;
+        }
+      }
     }
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
-      await api.moveTask(task.id, columnId);
+      await api.moveTask(task.id, columnId, targetIndex);
       this._draggingTaskId = null;
       // WebSocket event will refresh the task automatically
     } catch (err) {
