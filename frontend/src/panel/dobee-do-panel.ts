@@ -1089,15 +1089,26 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    let dropIndex = taskElements.length; // Default to end
+    let dropIndex = taskElements.length; // Default to end (after all tasks)
 
     // Find the insertion point based on mouse position
+    // Split each task into top/bottom halves for better precision
     for (let i = 0; i < taskElements.length; i++) {
       const rect = taskElements[i].getBoundingClientRect();
-      const middle = rect.top + rect.height / 2;
+      const taskTop = rect.top;
+      const taskBottom = rect.bottom;
+      const taskMiddle = taskTop + (taskBottom - taskTop) / 2;
 
-      if (mouseY < middle) {
+      // If mouse is in the top half of this task, drop before it
+      if (mouseY >= taskTop && mouseY < taskMiddle) {
         dropIndex = i;
+        break;
+      }
+
+      // If mouse is in the bottom half of this task, drop after it
+      // (which is before the next task, or at the end if this is the last)
+      if (mouseY >= taskMiddle && mouseY < taskBottom) {
+        dropIndex = i + 1;
         break;
       }
     }
@@ -1586,20 +1597,21 @@ export class DoBeeDoPanel extends LitElement {
                   No tasks yet
                 </div>
               `
-            : tasksForColumn.map((task, index) => {
-                return html`
-                  ${this._dropIndicatorPosition?.columnId === column.id &&
-                  this._dropIndicatorPosition?.index === index
-                    ? this._renderDropPreview()
-                    : ""}
-                  ${this._renderTask(task)}
-                  ${this._dropIndicatorPosition?.columnId === column.id &&
-                  this._dropIndicatorPosition?.index === index + 1 &&
-                  index === tasksForColumn.length - 1
-                    ? this._renderDropPreview()
-                    : ""}
-                `;
-              })}
+            : html`
+                ${tasksForColumn.map((task, index) => {
+                  return html`
+                    ${this._dropIndicatorPosition?.columnId === column.id &&
+                    this._dropIndicatorPosition?.index === index
+                      ? this._renderDropPreview()
+                      : ""}
+                    ${this._renderTask(task)}
+                  `;
+                })}
+                ${this._dropIndicatorPosition?.columnId === column.id &&
+                this._dropIndicatorPosition?.index === tasksForColumn.length
+                  ? this._renderDropPreview()
+                  : ""}
+              `}
         </div>
         <div class="add-task-form">
           <input
