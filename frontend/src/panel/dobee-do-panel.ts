@@ -1188,8 +1188,6 @@ export class DoBeeDoPanel extends LitElement {
       this._dropIndicatorPosition.columnId !== columnId ||
       this._dropIndicatorPosition.index !== dropIndex
     ) {
-      // eslint-disable-next-line no-console
-      console.log('[DRAGOVER] Calculated drop index:', dropIndex, 'Column:', columnId, 'Total tasks in DOM:', taskElements.length);
       this._dropIndicatorPosition = { columnId, index: dropIndex };
     }
   }
@@ -1259,9 +1257,6 @@ export class DoBeeDoPanel extends LitElement {
     // Use the pre-calculated drop position from dragover events
     // This ensures we drop exactly where the indicator was shown
     const targetIndex = this._dropIndicatorPosition?.index ?? 0;
-
-    // eslint-disable-next-line no-console
-    console.log('[DROP] Task:', task.id, 'Column:', columnId, 'Target index:', targetIndex, 'Indicator position:', this._dropIndicatorPosition);
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {

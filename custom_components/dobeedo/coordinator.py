@@ -442,9 +442,11 @@ class DobeeDoManager:
         if target_sort_index is None or target_sort_index >= len(column_tasks):
             target_sort_index = len(column_tasks)
 
-        task.sort_index = target_sort_index
+        # Use a fractional sort_index to ensure this task sorts before the target position
+        # This prevents stable sort issues when multiple tasks have the same sort_index
+        task.sort_index = target_sort_index - 0.5
 
-        # Reindex target column
+        # Reindex target column (this normalizes all sort_index values to 0, 1, 2, ...)
         await self._reindex_tasks(target_column_id)
 
         # If moved between columns, also reindex the source column
