@@ -393,6 +393,7 @@ export class DoBeeDoPanel extends LitElement {
         cursor: grab;
         transition: all 0.2s ease;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+        touch-action: none;
       }
 
       .task-card:hover {
