@@ -1015,7 +1015,9 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _handleDragStart(task: DoBeeDoTaskSummary, ev: DragEvent): void {
+    console.log("Desktop drag start:", task.id);
     this._draggingTaskId = task.id;
+    console.log("Set _draggingTaskId to:", this._draggingTaskId);
     if (ev.dataTransfer) {
       ev.dataTransfer.effectAllowed = "move";
       ev.dataTransfer.setData("text/plain", task.id);
@@ -1029,6 +1031,7 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _handleTouchStart(task: DoBeeDoTaskSummary, ev: TouchEvent): void {
+    console.log("Touch drag start:", task.id);
     // Prevent default to avoid scrolling while dragging
     ev.preventDefault();
 
@@ -1037,19 +1040,23 @@ export class DoBeeDoPanel extends LitElement {
     this._touchCurrentY = touch.clientY;
     this._touchDragging = true;
     this._draggingTaskId = task.id;
+    console.log("Set _draggingTaskId to:", this._draggingTaskId, "_touchDragging:", this._touchDragging);
 
     // Add global listeners now that drag has started
     this._boundTouchMove = this._handleTouchMove.bind(this);
     this._boundTouchEnd = this._handleTouchEnd.bind(this);
     document.addEventListener('touchmove', this._boundTouchMove, { passive: false });
     document.addEventListener('touchend', this._boundTouchEnd, { passive: false });
+    console.log("Added touch listeners to document");
   }
 
   private _handleTouchMove(ev: TouchEvent): void {
     if (!this._touchDragging || !this._draggingTaskId) {
+      console.log("Touch move skipped - dragging:", this._touchDragging, "taskId:", this._draggingTaskId);
       return;
     }
 
+    console.log("Touch move:", ev.touches[0].clientY);
     ev.preventDefault();
     const touch = ev.touches[0];
     this._touchCurrentY = touch.clientY;
