@@ -74,12 +74,14 @@ export class DoBeeDoPanel extends LitElement {
   static get styles(): CSSResultGroup {
     return css`
       :host {
-        display: block;
+        display: flex;
+        flex-direction: column;
         box-sizing: border-box;
         padding: 24px;
         background: var(--primary-background-color);
-        min-height: 100vh;
+        height: 100vh;
         color: var(--primary-text-color);
+        overflow: hidden;
       }
 
       h1 {
@@ -87,6 +89,13 @@ export class DoBeeDoPanel extends LitElement {
         font-size: 2em;
         font-weight: 300;
         color: var(--primary-text-color);
+        flex-shrink: 0;
+      }
+
+      .empty-state {
+        padding: 40px;
+        text-align: center;
+        color: var(--secondary-text-color);
       }
 
       /* Buttons */
@@ -158,18 +167,20 @@ export class DoBeeDoPanel extends LitElement {
       /* Board tabs selector */
       .board-tabs {
         display: flex;
-        margin-bottom: 24px;
-        border-bottom: 2px solid var(--divider-color);
+        margin-bottom: 0;
+        border-bottom: 1px solid var(--divider-color);
         overflow-x: auto;
+        overflow-y: hidden;
         scrollbar-width: thin;
+        flex-shrink: 0;
       }
 
       .board-tab {
         position: relative;
-        padding: 12px 20px;
+        padding: 16px 24px;
         cursor: pointer;
         border-bottom: 3px solid transparent;
-        margin-bottom: -2px;
+        margin-bottom: -1px;
         color: var(--secondary-text-color);
         font-size: 14px;
         font-weight: 500;
@@ -183,14 +194,13 @@ export class DoBeeDoPanel extends LitElement {
 
       .board-tab:hover:not(.selected) {
         color: var(--primary-text-color);
-        background: var(--state-icon-hover-color);
+        background: var(--secondary-background-color);
       }
 
       .board-tab.selected {
         color: var(--primary-color);
         border-bottom-color: var(--primary-color);
-        background: var(--primary-background-color);
-        font-weight: 600;
+        font-weight: 500;
       }
 
       .board-tab-delete {
@@ -258,24 +268,35 @@ export class DoBeeDoPanel extends LitElement {
         align-items: center;
       }
 
+      /* Board content wrapper */
+      .board-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        margin-top: 24px;
+      }
+
       /* Columns layout */
       .columns-container {
         display: flex;
         gap: 16px;
         overflow-x: auto;
+        overflow-y: hidden;
         padding-bottom: 16px;
+        flex: 1;
       }
 
       .column {
         flex: 0 0 300px;
         background: var(--card-background-color);
         border: 1px solid var(--divider-color);
-        border-radius: var(--ha-card-border-radius, 8px);
+        border-radius: var(--ha-card-border-radius, 12px);
         padding: 16px;
-        box-shadow: var(--ha-card-box-shadow);
+        box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.12));
         display: flex;
         flex-direction: column;
-        max-height: calc(100vh - 300px);
+        height: 100%;
       }
 
       .column-header {
@@ -314,19 +335,19 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Task cards */
       .task-card {
-        background: var(--secondary-background-color);
+        background: var(--card-background-color);
         border: 1px solid var(--divider-color);
-        border-left: 3px solid var(--divider-color);
-        border-radius: 6px;
+        border-left: 3px solid var(--primary-color);
+        border-radius: 8px;
         padding: 12px;
         cursor: grab;
         transition: all 0.2s ease;
-        box-shadow: var(--ha-card-box-shadow, none);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
       }
 
       .task-card:hover {
-        border-left-color: var(--primary-color);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        border-left-width: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         transform: translateY(-2px);
       }
 
@@ -412,19 +433,21 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Add column mock */
       .add-column-mock {
-        background: var(--card-background-color);
+        background: transparent;
         border: 2px dashed var(--divider-color);
-        opacity: 0.6;
+        opacity: 0.7;
         min-height: 60px;
         display: flex;
         align-items: flex-start;
         justify-content: center;
-        transition: opacity 0.2s ease, border-color 0.2s ease;
+        transition: all 0.2s ease;
+        box-shadow: none;
       }
 
       .add-column-mock:hover {
         opacity: 1;
         border-color: var(--primary-color);
+        background: var(--card-background-color);
       }
 
       .add-column-form {
@@ -973,7 +996,9 @@ export class DoBeeDoPanel extends LitElement {
 
     return html`
       ${this._renderBoardSelector()}
-      ${this._selectedBoardId ? this._renderBoard() : html`<p>Select a board to begin</p>`}
+      <div class="board-content">
+        ${this._selectedBoardId ? this._renderBoard() : html`<p>Select a board to begin</p>`}
+      </div>
     `;
   }
 
@@ -1067,12 +1092,8 @@ export class DoBeeDoPanel extends LitElement {
 
   private _renderBoard(): TemplateResult {
     return html`
-      ${this._columns.length === 0
-        ? html`<div class="empty-state">No columns yet. Add a column to get started!</div>`
-        : ""}
       <div class="columns-container">
-        ${this._columns.map((col) => this._renderColumn(col))}
-        ${this._renderAddColumnMock()}
+        ${this._columns.map((col) => this._renderColumn(col))} ${this._renderAddColumnMock()}
       </div>
     `;
   }
