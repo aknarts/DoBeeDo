@@ -1404,7 +1404,7 @@ export class DoBeeDoPanel extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._unsubscribeUpdates) {
+    if (this._unsubscribeUpdates && typeof this._unsubscribeUpdates === 'function') {
       this._unsubscribeUpdates();
       this._unsubscribeUpdates = null;
     }
