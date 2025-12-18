@@ -71,6 +71,9 @@ export class DoBeeDoPanel extends LitElement {
   @state()
   private _dragOverColumnId: string | null = null;
 
+  @state()
+  private _dropIndicatorPosition: { columnId: string; index: number } | null = null;
+
   static get styles(): CSSResultGroup {
     return css`
       :host {
@@ -385,6 +388,29 @@ export class DoBeeDoPanel extends LitElement {
         border: 2px dashed var(--primary-color);
         border-radius: 8px;
         min-height: 150px;
+      }
+
+      /* Drop indicator */
+      .drop-indicator {
+        height: 3px;
+        background: var(--primary-color);
+        margin: -6px 0;
+        border-radius: 2px;
+        box-shadow: 0 0 8px var(--primary-color);
+        position: relative;
+        z-index: 10;
+      }
+
+      .drop-indicator::before {
+        content: "";
+        position: absolute;
+        left: -4px;
+        top: -3px;
+        width: 8px;
+        height: 8px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        box-shadow: 0 0 4px var(--primary-color);
       }
 
       .task-title {
@@ -854,6 +880,7 @@ export class DoBeeDoPanel extends LitElement {
   private _handleDragEnd(): void {
     this._draggingTaskId = null;
     this._dragOverColumnId = null;
+    this._dropIndicatorPosition = null;
   }
 
   private _handleDragOver(ev: DragEvent): void {
@@ -863,12 +890,40 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private _handleDragOverTasksList(columnId: string, ev: DragEvent): void {
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    if (!this._draggingTaskId) {
+      return;
+    }
+
+    const tasksListEl = ev.currentTarget as HTMLElement;
+    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
+    const mouseY = ev.clientY;
+
+    let dropIndex = taskElements.length; // Default to end
+
+    for (let i = 0; i < taskElements.length; i++) {
+      const rect = taskElements[i].getBoundingClientRect();
+      const middle = rect.top + rect.height / 2;
+
+      if (mouseY < middle) {
+        dropIndex = i;
+        break;
+      }
+    }
+
+    this._dropIndicatorPosition = { columnId, index: dropIndex };
+  }
+
   private _handleDragEnterColumn(columnId: string): void {
     this._dragOverColumnId = columnId;
   }
 
   private _handleDragLeaveColumn(): void {
     this._dragOverColumnId = null;
+    this._dropIndicatorPosition = null;
   }
 
   private _isTaskOverdue(task: DoBeeDoTaskSummary): boolean {
@@ -949,11 +1004,13 @@ export class DoBeeDoPanel extends LitElement {
     try {
       await api.moveTask(task.id, columnId, targetIndex);
       this._draggingTaskId = null;
+      this._dropIndicatorPosition = null;
       // WebSocket event will refresh the task automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to move task via drag-and-drop", err);
       this._draggingTaskId = null;
+      this._dropIndicatorPosition = null;
     }
   }
 
@@ -1205,14 +1262,33 @@ export class DoBeeDoPanel extends LitElement {
         </div>
         <div
           class="tasks-list ${isDragOver ? "drag-over" : ""}"
-          @dragover=${this._handleDragOver}
+          @dragover=${(ev: DragEvent) => this._handleDragOverTasksList(column.id, ev)}
           @drop=${(ev: DragEvent) => this._handleDrop(column.id, ev)}
         >
           ${tasksForColumn.length === 0
-            ? html`<div class="empty-state" style="padding: 16px; font-size: 13px;">
-                No tasks yet
-              </div>`
-            : tasksForColumn.map((task) => this._renderTask(task))}
+            ? html`
+                ${this._dropIndicatorPosition?.columnId === column.id &&
+                this._dropIndicatorPosition?.index === 0
+                  ? html`<div class="drop-indicator"></div>`
+                  : ""}
+                <div class="empty-state" style="padding: 16px; font-size: 13px;">
+                  No tasks yet
+                </div>
+              `
+            : tasksForColumn.map((task, index) => {
+                return html`
+                  ${this._dropIndicatorPosition?.columnId === column.id &&
+                  this._dropIndicatorPosition?.index === index
+                    ? html`<div class="drop-indicator"></div>`
+                    : ""}
+                  ${this._renderTask(task)}
+                  ${this._dropIndicatorPosition?.columnId === column.id &&
+                  this._dropIndicatorPosition?.index === index + 1 &&
+                  index === tasksForColumn.length - 1
+                    ? html`<div class="drop-indicator"></div>`
+                    : ""}
+                `;
+              })}
         </div>
         <div class="add-task-form">
           <input
