@@ -24,6 +24,7 @@ export interface DoBeeDoTaskSummary {
   title: string;
   description?: string | null;
   sort_index: number;
+  due_date?: string | null;
 }
 
 export interface HassConnection {
@@ -119,23 +120,32 @@ export class DoBeeDoApiClient {
     columnId: string,
     title: string,
     description?: string,
+    dueDate?: string,
   ): Promise<DoBeeDoTaskSummary> {
-    const response = await this.connection.sendMessagePromise<{
-      task: DoBeeDoTaskSummary;
-    }>({
+    const payload: Record<string, any> = {
       type: "dobeedo/create_task",
       board_id: boardId,
       column_id: columnId,
       title,
-      description,
-    });
+    };
+
+    if (description !== undefined) {
+      payload.description = description;
+    }
+    if (dueDate !== undefined) {
+      payload.due_date = dueDate;
+    }
+
+    const response = await this.connection.sendMessagePromise<{
+      task: DoBeeDoTaskSummary;
+    }>(payload);
 
     return response.task;
   }
 
   public async updateTask(
     taskId: string,
-    updates: { title?: string; description?: string | null },
+    updates: { title?: string; description?: string | null; due_date?: string | null },
   ): Promise<DoBeeDoTaskSummary> {
     const payload: Record<string, any> = {
       type: "dobeedo/update_task",
@@ -147,6 +157,9 @@ export class DoBeeDoApiClient {
     }
     if (updates.description !== undefined) {
       payload.description = updates.description;
+    }
+    if (updates.due_date !== undefined) {
+      payload.due_date = updates.due_date;
     }
 
     const response = await this.connection.sendMessagePromise<{
@@ -273,12 +286,5 @@ export class DoBeeDoApiClient {
       console.debug("DoBeeDo: unsubscribe from subscribe_updates");
       unsubscribe();
     };
-  }
-
-  // TODO: REMOVE BEFORE RELEASE - Development helper only!
-  public async populateTestData(): Promise<void> {
-    await this.connection.sendMessagePromise<{ success: boolean }>({
-      type: "dobeedo/populate_test_data",
-    });
   }
 }

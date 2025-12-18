@@ -76,6 +76,7 @@ class Task:
     title: str
     description: Optional[str] = None
     sort_index: int = 0
+    due_date: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize the task to a dictionary."""
@@ -93,6 +94,7 @@ class Task:
             title=str(data["title"]),
             description=data.get("description"),
             sort_index=int(data.get("sort_index", 0)),
+            due_date=data.get("due_date"),
         )
 
 

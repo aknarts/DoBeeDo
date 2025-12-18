@@ -33,6 +33,9 @@ export class DoBeeDoPanel extends LitElement {
   private _newTaskDescriptions: Record<string, string> = {};
 
   @state()
+  private _newTaskDueDates: Record<string, string> = {};
+
+  @state()
   private _newColumnName = "";
 
   @state()
@@ -52,6 +55,9 @@ export class DoBeeDoPanel extends LitElement {
 
   @state()
   private _editTaskDescription: string = "";
+
+  @state()
+  private _editTaskDueDate: string = "";
 
   @state()
   private _movingTaskId: string | null = null;
@@ -342,6 +348,26 @@ export class DoBeeDoPanel extends LitElement {
         line-height: 1.4;
       }
 
+      .task-due-date {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: var(--secondary-background-color, var(--divider-color));
+        display: inline-block;
+      }
+
+      .task-due-date.overdue {
+        color: var(--warning-color);
+        background: rgba(244, 67, 54, 0.1);
+        font-weight: 500;
+      }
+
+      .task-card.overdue {
+        border-left-color: var(--warning-color);
+      }
+
       .task-actions {
         display: flex;
         gap: 4px;
@@ -565,6 +591,7 @@ export class DoBeeDoPanel extends LitElement {
   private async _handleCreateTask(columnId: string): Promise<void> {
     const title = this._newTaskTitles[columnId] || "";
     const description = this._newTaskDescriptions[columnId] || "";
+    const dueDate = this._newTaskDueDates[columnId] || "";
 
     if (!this.hass || !this._selectedBoardId || !title.trim()) {
       return;
@@ -582,12 +609,15 @@ export class DoBeeDoPanel extends LitElement {
         columnId,
         title.trim(),
         description.trim() || undefined,
+        dueDate.trim() || undefined,
       );
       // Clear input for this column
       delete this._newTaskTitles[columnId];
       delete this._newTaskDescriptions[columnId];
+      delete this._newTaskDueDates[columnId];
       this._newTaskTitles = { ...this._newTaskTitles };
       this._newTaskDescriptions = { ...this._newTaskDescriptions };
+      this._newTaskDueDates = { ...this._newTaskDueDates };
 
       // WebSocket event will refresh the tasks automatically
     } catch (err) {
@@ -665,12 +695,14 @@ export class DoBeeDoPanel extends LitElement {
     this._editingTaskId = task.id;
     this._editTaskTitle = task.title;
     this._editTaskDescription = task.description ?? "";
+    this._editTaskDueDate = task.due_date ?? "";
   }
 
   private _cancelEditTask(): void {
     this._editingTaskId = null;
     this._editTaskTitle = "";
     this._editTaskDescription = "";
+    this._editTaskDueDate = "";
   }
 
   private async _saveEditTask(): Promise<void> {
@@ -688,7 +720,7 @@ export class DoBeeDoPanel extends LitElement {
       return;
     }
 
-    const updates: { title?: string; description?: string | null } = {};
+    const updates: { title?: string; description?: string | null; due_date?: string | null } = {};
 
     if (trimmedTitle !== task.title) {
       updates.title = trimmedTitle;
@@ -699,7 +731,12 @@ export class DoBeeDoPanel extends LitElement {
       updates.description = trimmedDescription === "" ? null : trimmedDescription;
     }
 
-    if (!updates.title && updates.description === undefined) {
+    const trimmedDueDate = this._editTaskDueDate.trim();
+    if (trimmedDueDate !== (task.due_date ?? "")) {
+      updates.due_date = trimmedDueDate === "" ? null : trimmedDueDate;
+    }
+
+    if (!updates.title && updates.description === undefined && updates.due_date === undefined) {
       this._cancelEditTask();
       return;
     }
@@ -766,6 +803,37 @@ export class DoBeeDoPanel extends LitElement {
 
   private _handleDragLeaveColumn(): void {
     this._dragOverColumnId = null;
+  }
+
+  private _isTaskOverdue(task: DoBeeDoTaskSummary): boolean {
+    if (!task.due_date) {
+      return false;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(task.due_date);
+    return dueDate < today;
+  }
+
+  private _formatDueDate(dueDate: string): string {
+    const date = new Date(dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const taskDate = new Date(dueDate);
+    taskDate.setHours(0, 0, 0, 0);
+
+    if (taskDate.getTime() === today.getTime()) {
+      return "Today";
+    } else if (taskDate.getTime() === tomorrow.getTime()) {
+      return "Tomorrow";
+    } else {
+      // Format as "Mon DD" or "MMM DD" depending on preference
+      const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+      return date.toLocaleDateString(undefined, options);
+    }
   }
 
   private async _handleDrop(columnId: string, ev: DragEvent): Promise<void> {
@@ -864,33 +932,6 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
-  // TODO: REMOVE BEFORE RELEASE - Development helper only!
-  private async _handlePopulateTestData(): Promise<void> {
-    if (!this.hass) {
-      return;
-    }
-
-    // Always confirm since this is destructive
-    if (
-      !window.confirm(
-        "⚠️ WARNING: This will DELETE ALL existing boards, columns, and tasks!\n\n" +
-          "This is a development helper that clears everything and creates fresh test data.\n\n" +
-          "Are you sure you want to continue?",
-      )
-    ) {
-      return;
-    }
-
-    const api = new DoBeeDoApiClient(this.hass.connection);
-    try {
-      await api.populateTestData();
-      await this._fetchBoards();
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("Failed to populate test data", err);
-    }
-  }
-
   disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._unsubscribeUpdates) {
@@ -900,19 +941,8 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   protected render(): TemplateResult {
-    // TODO: REMOVE BEFORE RELEASE - The test data button is dev-only
     return html`
       <h1>DoBeeDo</h1>
-
-      <div class="flex-row mb-16">
-        <button class="warning" @click=${() => this._handlePopulateTestData()} ?disabled=${this._loading}>
-          ⚠️ Populate Test Data (DEV ONLY)
-        </button>
-        <span class="helper-text">
-          (Development helper - CLEARS ALL DATA and adds sample board. Remove before release!)
-        </span>
-      </div>
-
       ${this._loading ? html`<p>Loading boards…</p>` : this._renderContent()}
     `;
   }
@@ -922,7 +952,7 @@ export class DoBeeDoPanel extends LitElement {
       return html`
         <div class="empty-state">
           <p>No boards available yet.</p>
-          <p>Click "Populate Test Data" to get started!</p>
+          <p>Create a board using the input above to get started!</p>
         </div>
       `;
     }
@@ -1117,6 +1147,24 @@ export class DoBeeDoPanel extends LitElement {
                       }
                     }}
                   />
+                  <input
+                    type="date"
+                    class="add-task-input"
+                    .value=${this._newTaskDueDates[column.id] || ""}
+                    placeholder="Due date (optional)"
+                    @input=${(ev: Event) => {
+                      const target = ev.target as HTMLInputElement;
+                      this._newTaskDueDates = {
+                        ...this._newTaskDueDates,
+                        [column.id]: target.value,
+                      };
+                    }}
+                    @keydown=${(ev: KeyboardEvent) => {
+                      if (ev.key === "Enter") {
+                        void this._handleCreateTask(column.id);
+                      }
+                    }}
+                  />
                   <div class="add-task-buttons">
                     <button class="primary small" @click=${() => this._handleCreateTask(column.id)}>
                       Add
@@ -1126,8 +1174,10 @@ export class DoBeeDoPanel extends LitElement {
                       @click=${() => {
                         delete this._newTaskTitles[column.id];
                         delete this._newTaskDescriptions[column.id];
+                        delete this._newTaskDueDates[column.id];
                         this._newTaskTitles = { ...this._newTaskTitles };
                         this._newTaskDescriptions = { ...this._newTaskDescriptions };
+                        this._newTaskDueDates = { ...this._newTaskDueDates };
                       }}
                     >
                       Cancel
@@ -1166,6 +1216,16 @@ export class DoBeeDoPanel extends LitElement {
               @input=${(ev: Event) => {
                 const target = ev.target as HTMLInputElement;
                 this._editTaskDescription = target.value;
+              }}
+              style="width: 100%; margin-bottom: 8px;"
+            />
+            <input
+              type="date"
+              .value=${this._editTaskDueDate}
+              placeholder="Due date (optional)"
+              @input=${(ev: Event) => {
+                const target = ev.target as HTMLInputElement;
+                this._editTaskDueDate = target.value;
               }}
               style="width: 100%;"
             />
@@ -1207,16 +1267,22 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     const isDragging = this._draggingTaskId === task.id;
+    const isOverdue = this._isTaskOverdue(task);
 
     return html`
       <div
-        class="task-card ${isDragging ? "dragging" : ""}"
+        class="task-card ${isDragging ? "dragging" : ""} ${isOverdue ? "overdue" : ""}"
         draggable="true"
         @dragstart=${(ev: DragEvent) => this._handleDragStart(task, ev)}
         @dragend=${this._handleDragEnd}
       >
         <div class="task-title">${task.title}</div>
         ${task.description ? html`<div class="task-description">${task.description}</div>` : ""}
+        ${task.due_date
+          ? html`<div class="task-due-date ${isOverdue ? "overdue" : ""}">
+              📅 ${this._formatDueDate(task.due_date)}
+            </div>`
+          : ""}
         <div class="task-actions">
           <button class="secondary small" @click=${() => this._startEditTask(task)}>Edit</button>
           <button class="secondary small" @click=${() => this._startMoveTask(task)}>Move</button>

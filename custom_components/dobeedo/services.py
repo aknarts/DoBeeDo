@@ -131,6 +131,16 @@ async def _async_handle_delete_task(hass: HomeAssistant, call: ServiceCall) -> N
         raise HomeAssistantError(f"Unknown task id: {err}") from err
 
 
+async def _async_handle_populate_test_data(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Populate the board with sample test data (DEVELOPMENT ONLY).
+
+    WARNING: This service CLEARS ALL DATA and creates a fresh sample board
+    with columns and tasks. Use only for testing and development!
+    """
+    manager = _get_manager(hass)
+    await manager.async_populate_test_data()
+
+
 CREATE_BOARD_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_BOARD_NAME): cv.string,
@@ -185,6 +195,8 @@ DELETE_TASK_SCHEMA = vol.Schema(
     }
 )
 
+POPULATE_TEST_DATA_SCHEMA = vol.Schema({})
+
 
 def async_register_services(hass: HomeAssistant) -> None:
     """Register DoBeeDo services with Home Assistant."""
@@ -236,4 +248,11 @@ def async_register_services(hass: HomeAssistant) -> None:
         "delete_task",
         _async_handle_delete_task,
         schema=DELETE_TASK_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "populate_test_data",
+        _async_handle_populate_test_data,
+        schema=POPULATE_TEST_DATA_SCHEMA,
     )

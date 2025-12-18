@@ -194,6 +194,33 @@ Future ideas (post-1.0) include recurring tasks, calendar views, and light integ
 
 ---
 
+## Development & Testing
+
+### Populating Test Data
+
+For development and testing purposes, you can quickly populate your DoBeeDo instance with sample data. This is useful for testing features or demonstrating the integration.
+
+**WARNING**: This service CLEARS ALL existing boards, columns, and tasks before creating sample data.
+
+#### Using Developer Tools (UI):
+
+1. Go to **Developer Tools → Services** in Home Assistant
+2. Search for and select **dobeedo.populate_test_data**
+3. Click **Call Service**
+
+#### Using the CLI:
+
+```bash
+ha service call dobeedo.populate_test_data
+```
+
+This will create:
+- A sample board called "Sample Project"
+- Five columns (Backlog, To Do, In Progress, Review, Done)
+- Multiple tasks distributed across the columns with descriptions
+
+---
+
 ## Development Plan (Short Version)
 
 Detailed technical planning lives in `docs/DEVELOPMENT_PLAN.md`. At a high level:

@@ -66,7 +66,7 @@ class DobeeDoManager:
     async def async_clear_all_data(self) -> None:
         """Clear all boards, columns, and tasks.
 
-        TODO: REMOVE BEFORE RELEASE - This is a development helper only!
+        DEVELOPMENT ONLY: This is a destructive operation meant for testing.
         """
         self._boards.clear()
         self._columns.clear()
@@ -79,10 +79,11 @@ class DobeeDoManager:
     async def async_populate_test_data(self) -> None:
         """Populate the board with sample data for testing.
 
-        This clears all existing data and creates a fresh sample board
-        with multiple columns and tasks. Useful for quick testing.
+        DEVELOPMENT ONLY: This clears all existing data and creates a fresh
+        sample board with multiple columns and tasks. Useful for quick testing.
 
-        TODO: REMOVE BEFORE RELEASE - This is a development helper only!
+        Call via: Developer Tools > Services > dobeedo.populate_test_data
+        Or CLI: ha service call dobeedo.populate_test_data
         """
         # Clear existing data first
         await self.async_clear_all_data()
@@ -346,6 +347,7 @@ class DobeeDoManager:
         title: str,
         description: str | None = None,
         sort_index: int | None = None,
+        due_date: str | None = None,
     ) -> Task:
         """Create a new task in a column."""
 
@@ -372,6 +374,7 @@ class DobeeDoManager:
             title=title,
             description=description,
             sort_index=sort_index,
+            due_date=due_date,
         )
         self._tasks[task_id] = task
 
@@ -393,6 +396,8 @@ class DobeeDoManager:
             task.title = str(updates["title"])
         if "description" in updates:
             task.description = updates["description"]
+        if "due_date" in updates:
+            task.due_date = updates["due_date"]
 
         self._fire_event(EVENT_TASK_UPDATED, {"task": task.to_dict()})
         await self.async_save_to_storage()

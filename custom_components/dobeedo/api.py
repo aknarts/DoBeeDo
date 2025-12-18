@@ -165,6 +165,7 @@ async def websocket_get_columns(
         "title": str,
         Optional("description"): VAny(str, None),
         Optional("sort_index"): Coerce(int),
+        Optional("due_date"): VAny(str, None),
         # Optional fields may be omitted.
     }
 )
@@ -175,7 +176,7 @@ async def websocket_create_task(
     """Create a new task on a board.
 
     Required fields: ``board_id``, ``column_id``, ``title``.
-    Optional fields: ``description``, ``sort_index``.
+    Optional fields: ``description``, ``sort_index``, ``due_date``.
     """
 
     manager = _get_manager(hass)
@@ -190,6 +191,7 @@ async def websocket_create_task(
             msg["title"],
             description=msg.get("description"),
             sort_index=msg.get("sort_index"),
+            due_date=msg.get("due_date"),
         )
     except KeyError as err:
         connection.send_error(msg["id"], "not_found", f"Unknown id: {err}")
@@ -204,6 +206,7 @@ async def websocket_create_task(
         "task_id": str,
         Optional("title"): str,
         Optional("description"): VAny(str, None),
+        Optional("due_date"): VAny(str, None),
     }
 )
 @websocket_api.async_response
@@ -213,7 +216,7 @@ async def websocket_update_task(
     """Update an existing task.
 
     Required fields: ``task_id``.
-    Optional fields: ``title``, ``description``.
+    Optional fields: ``title``, ``description``, ``due_date``.
     """
 
     manager = _get_manager(hass)
@@ -226,6 +229,8 @@ async def websocket_update_task(
         updates["title"] = msg["title"]
     if "description" in msg:
         updates["description"] = msg["description"]
+    if "due_date" in msg:
+        updates["due_date"] = msg["due_date"]
 
     try:
         task = await manager.async_update_task(msg["task_id"], **updates)
@@ -452,28 +457,6 @@ async def websocket_subscribe_updates(
     connection.send_result(msg["id"], {"success": True})
 
 
-@websocket_api.websocket_command({"type": f"{DOMAIN}/populate_test_data"})
-@websocket_api.async_response
-async def websocket_populate_test_data(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Populate the board with sample test data.
-
-    This is a development/testing helper that CLEARS ALL DATA and creates
-    a fresh sample board with columns and tasks.
-
-    TODO: REMOVE BEFORE RELEASE - This is a development helper only!
-    """
-
-    manager = _get_manager(hass)
-    if manager is None:
-        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
-        return
-
-    await manager.async_populate_test_data()
-    connection.send_result(msg["id"], {"success": True})
-
-
 def async_register_api(hass: HomeAssistant) -> None:
     """Register DoBeeDo WebSocket commands with Home Assistant."""
 
@@ -489,4 +472,3 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_delete_column)
     websocket_api.async_register_command(hass, websocket_delete_board)
     websocket_api.async_register_command(hass, websocket_subscribe_updates)
-    websocket_api.async_register_command(hass, websocket_populate_test_data)
