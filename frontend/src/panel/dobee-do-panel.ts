@@ -402,30 +402,6 @@ export class DoBeeDoPanel extends LitElement {
         cursor: grabbing;
       }
 
-      .column.drag-active {
-        border: 3px solid var(--primary-color);
-        border-style: dashed;
-        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.08);
-        box-shadow: 0 0 0 2px rgba(var(--rgb-primary-color, 33, 150, 243), 0.2);
-      }
-
-      .column.drag-over {
-        border: 4px solid var(--primary-color);
-        border-style: solid;
-        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.15);
-        box-shadow: 0 0 30px rgba(var(--rgb-primary-color, 33, 150, 243), 0.5),
-                    0 0 0 4px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
-        transition: all 0.2s ease;
-      }
-
-      .tasks-list.drag-over {
-        background: rgba(var(--rgb-primary-color, 33, 150, 243), 0.2);
-        border: 3px dashed var(--primary-color);
-        border-radius: 8px;
-        min-height: 150px;
-        box-shadow: inset 0 0 20px rgba(var(--rgb-primary-color, 33, 150, 243), 0.3);
-      }
-
       /* Drop position indicators - simple border highlights */
       .task-card.drop-target-before {
         border-top: 4px solid var(--primary-color);
@@ -584,14 +560,6 @@ export class DoBeeDoPanel extends LitElement {
         border-style: solid;
         background: var(--card-background-color);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      /* Prevent drag styling on add-column-mock */
-      .add-column-mock.drag-active {
-        border: 2px dashed var(--primary-text-color);
-        background: transparent;
-        opacity: 0.3;
-        box-shadow: none;
       }
 
       .add-column-form {
@@ -1675,9 +1643,8 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _renderAddColumnMock(): TemplateResult {
-    const isDragActive = this._draggingTaskId !== null;
     return html`
-      <div class="column add-column-mock ${isDragActive ? "drag-active" : ""}">
+      <div class="column add-column-mock">
         <div class="add-column-form">
           <input
             type="text"
@@ -1721,12 +1688,9 @@ export class DoBeeDoPanel extends LitElement {
       .filter((task) => task.column_id === column.id)
       .sort((a, b) => a.sort_index - b.sort_index);
 
-    const isDragOver = this._dragOverColumnId === column.id;
-    const isDragActive = this._draggingTaskId !== null;
-
     return html`
       <div
-        class="column ${isDragActive ? "drag-active" : ""} ${isDragOver ? "drag-over" : ""}"
+        class="column"
         @dragover=${this._handleDragOver}
         @dragenter=${(ev: DragEvent) => this._handleDragEnterColumn(column.id, ev)}
         @dragleave=${(ev: DragEvent) => this._handleDragLeaveColumn(ev)}
@@ -1755,7 +1719,7 @@ export class DoBeeDoPanel extends LitElement {
           </div>
         </div>
         <div
-          class="tasks-list ${isDragOver ? "drag-over" : ""} ${
+          class="tasks-list ${
             tasksForColumn.length === 0 &&
             this._dropIndicatorPosition?.columnId === column.id
               ? "drop-target-empty"
