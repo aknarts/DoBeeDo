@@ -27,10 +27,10 @@ export class DoBeeDoPanel extends LitElement {
   private _loading = false;
 
   @state()
-  private _newTaskTitle = "";
+  private _newTaskTitles: Record<string, string> = {};
 
   @state()
-  private _newTaskDescription = "";
+  private _newTaskDescriptions: Record<string, string> = {};
 
   @state()
   private _newColumnName = "";
@@ -540,7 +540,10 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private async _handleCreateTask(columnId: string): Promise<void> {
-    if (!this.hass || !this._selectedBoardId || !this._newTaskTitle.trim()) {
+    const title = this._newTaskTitles[columnId] || "";
+    const description = this._newTaskDescriptions[columnId] || "";
+
+    if (!this.hass || !this._selectedBoardId || !title.trim()) {
       return;
     }
 
@@ -551,20 +554,19 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     try {
-      const newTask = await api.createTask(
+      await api.createTask(
         board.id,
         columnId,
-        this._newTaskTitle.trim(),
-        this._newTaskDescription.trim() || undefined,
+        title.trim(),
+        description.trim() || undefined,
       );
-      this._newTaskTitle = "";
-      this._newTaskDescription = "";
+      // Clear input for this column
+      delete this._newTaskTitles[columnId];
+      delete this._newTaskDescriptions[columnId];
+      this._newTaskTitles = { ...this._newTaskTitles };
+      this._newTaskDescriptions = { ...this._newTaskDescriptions };
 
-      if (board.id === this._selectedBoardId) {
-        this._tasks = [...this._tasks, newTask];
-      } else {
-        await this._refreshTasksForSelectedBoard();
-      }
+      // WebSocket event will refresh the tasks automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to create DoBeeDo task", err);
@@ -578,11 +580,10 @@ export class DoBeeDoPanel extends LitElement {
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
-      const newColumn = await api.createColumn(this._selectedBoardId, this._newColumnName.trim());
+      await api.createColumn(this._selectedBoardId, this._newColumnName.trim());
       this._newColumnName = "";
 
-      // Append the new column locally so the UI updates immediately.
-      this._columns = [...this._columns, newColumn];
+      // WebSocket event will refresh the columns automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to create DoBeeDo column", err);
@@ -598,7 +599,10 @@ export class DoBeeDoPanel extends LitElement {
     try {
       const newBoard = await api.createBoard(this._newBoardName.trim());
       this._newBoardName = "";
-      this._boards = [...this._boards, newBoard];
+
+      // Wait for WebSocket event to refresh boards, then select the new one
+      // For now, manually refresh and select
+      await this._fetchBoards();
       this._selectedBoardId = newBoard.id;
       await this._refreshColumnsAndTasks();
     } catch (err) {
@@ -619,9 +623,11 @@ export class DoBeeDoPanel extends LitElement {
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
       await api.deleteBoard(board.id);
-      this._boards = this._boards.filter((b) => b.id !== board.id);
 
-      // Select first remaining board or clear selection
+      // Wait for boards to refresh, then select first remaining board
+      await this._fetchBoards();
+
+      // If we deleted the selected board, select the first remaining one
       if (this._selectedBoardId === board.id) {
         this._selectedBoardId = this._boards.length > 0 ? this._boards[0].id : null;
         await this._refreshColumnsAndTasks();
@@ -677,9 +683,9 @@ export class DoBeeDoPanel extends LitElement {
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
-      const updated = await api.updateTask(this._editingTaskId, updates);
-      this._tasks = this._tasks.map((t) => (t.id === updated.id ? updated : t));
+      await api.updateTask(this._editingTaskId, updates);
       this._cancelEditTask();
+      // WebSocket event will refresh the task automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to update DoBeeDo task", err);
@@ -702,9 +708,9 @@ export class DoBeeDoPanel extends LitElement {
 
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
-      const moved = await api.moveTask(task.id, targetColumnId);
-      this._tasks = this._tasks.map((t) => (t.id === moved.id ? moved : t));
+      await api.moveTask(task.id, targetColumnId);
       this._cancelMoveTask();
+      // WebSocket event will refresh the task automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to move DoBeeDo task", err);
@@ -723,7 +729,7 @@ export class DoBeeDoPanel extends LitElement {
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
       await api.deleteTask(task.id);
-      this._tasks = this._tasks.filter((t) => t.id !== task.id);
+      // WebSocket event will refresh the tasks automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to delete DoBeeDo task", err);
@@ -750,8 +756,7 @@ export class DoBeeDoPanel extends LitElement {
     const api = new DoBeeDoApiClient(this.hass.connection);
     try {
       await api.deleteColumn(column.id);
-      this._columns = this._columns.filter((c) => c.id !== column.id);
-      this._tasks = this._tasks.filter((t) => t.column_id !== column.id);
+      // WebSocket event will refresh the columns and tasks automatically
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Failed to delete DoBeeDo column", err);
@@ -969,29 +974,33 @@ export class DoBeeDoPanel extends LitElement {
           <input
             type="text"
             class="add-task-input"
-            .value=${this._newTaskTitle}
+            .value=${this._newTaskTitles[column.id] || ""}
             placeholder="Add a task..."
             @input=${(ev: Event) => {
               const target = ev.target as HTMLInputElement;
-              this._newTaskTitle = target.value;
+              this._newTaskTitles = { ...this._newTaskTitles, [column.id]: target.value };
             }}
             @keydown=${(ev: KeyboardEvent) => {
-              if (ev.key === "Enter" && this._newTaskTitle.trim()) {
+              const title = this._newTaskTitles[column.id] || "";
+              if (ev.key === "Enter" && title.trim()) {
                 void this._handleCreateTask(column.id);
               }
             }}
           />
-          ${this._newTaskTitle.trim()
+          ${(this._newTaskTitles[column.id] || "").trim()
             ? html`
                 <div class="add-task-actions">
                   <input
                     type="text"
                     class="add-task-input"
-                    .value=${this._newTaskDescription}
+                    .value=${this._newTaskDescriptions[column.id] || ""}
                     placeholder="Description (optional)"
                     @input=${(ev: Event) => {
                       const target = ev.target as HTMLInputElement;
-                      this._newTaskDescription = target.value;
+                      this._newTaskDescriptions = {
+                        ...this._newTaskDescriptions,
+                        [column.id]: target.value,
+                      };
                     }}
                     @keydown=${(ev: KeyboardEvent) => {
                       if (ev.key === "Enter") {
@@ -1006,8 +1015,10 @@ export class DoBeeDoPanel extends LitElement {
                     <button
                       class="secondary small"
                       @click=${() => {
-                        this._newTaskTitle = "";
-                        this._newTaskDescription = "";
+                        delete this._newTaskTitles[column.id];
+                        delete this._newTaskDescriptions[column.id];
+                        this._newTaskTitles = { ...this._newTaskTitles };
+                        this._newTaskDescriptions = { ...this._newTaskDescriptions };
                       }}
                     >
                       Cancel
