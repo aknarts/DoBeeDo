@@ -56,6 +56,12 @@ export class DoBeeDoPanel extends LitElement {
   @state()
   private _movingTaskId: string | null = null;
 
+  @state()
+  private _draggingTaskId: string | null = null;
+
+  @state()
+  private _dragOverColumnId: string | null = null;
+
   static get styles(): CSSResultGroup {
     return css`
       :host {
@@ -295,7 +301,7 @@ export class DoBeeDoPanel extends LitElement {
         border-left: 3px solid var(--ha-color-border-neutral-loud, #b1b1b1);
         border-radius: 6px;
         padding: 12px;
-        cursor: pointer;
+        cursor: grab;
         transition: all 0.2s ease;
         box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
       }
@@ -304,6 +310,23 @@ export class DoBeeDoPanel extends LitElement {
         border-left-color: var(--primary-color);
         box-shadow: var(--material-shadow-elevation-4dp, 0 4px 5px 0 rgba(0,0,0,0.14));
         transform: translateY(-2px);
+      }
+
+      .task-card.dragging {
+        opacity: 0.5;
+        cursor: grabbing;
+        transform: rotate(2deg);
+      }
+
+      .column.drag-over {
+        background: var(--primary-color);
+        opacity: 0.1;
+      }
+
+      .tasks-list.drag-over {
+        background: var(--primary-color);
+        opacity: 0.2;
+        border-radius: 4px;
       }
 
       .task-title {
@@ -717,6 +740,67 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private _handleDragStart(task: DoBeeDoTaskSummary, ev: DragEvent): void {
+    this._draggingTaskId = task.id;
+    if (ev.dataTransfer) {
+      ev.dataTransfer.effectAllowed = "move";
+      ev.dataTransfer.setData("text/plain", task.id);
+    }
+  }
+
+  private _handleDragEnd(): void {
+    this._draggingTaskId = null;
+    this._dragOverColumnId = null;
+  }
+
+  private _handleDragOver(ev: DragEvent): void {
+    ev.preventDefault();
+    if (ev.dataTransfer) {
+      ev.dataTransfer.dropEffect = "move";
+    }
+  }
+
+  private _handleDragEnterColumn(columnId: string): void {
+    this._dragOverColumnId = columnId;
+  }
+
+  private _handleDragLeaveColumn(): void {
+    this._dragOverColumnId = null;
+  }
+
+  private async _handleDrop(columnId: string, ev: DragEvent): Promise<void> {
+    ev.preventDefault();
+    this._dragOverColumnId = null;
+
+    if (!this._draggingTaskId || !this.hass) {
+      return;
+    }
+
+    const task = this._tasks.find((t) => t.id === this._draggingTaskId);
+    if (!task) {
+      this._draggingTaskId = null;
+      return;
+    }
+
+    // If dropped in the same column, don't do anything for now
+    // TODO: Implement reordering within the same column
+    if (columnId === task.column_id) {
+      this._draggingTaskId = null;
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      await api.moveTask(task.id, columnId);
+      this._draggingTaskId = null;
+      // WebSocket event will refresh the task automatically
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to move task via drag-and-drop", err);
+      this._draggingTaskId = null;
+    }
+  }
+
   private async _handleDeleteTask(task: DoBeeDoTaskSummary): Promise<void> {
     if (!this.hass) {
       return;
@@ -948,8 +1032,16 @@ export class DoBeeDoPanel extends LitElement {
       .filter((task) => task.column_id === column.id)
       .sort((a, b) => a.sort_index - b.sort_index);
 
+    const isDragOver = this._dragOverColumnId === column.id;
+
     return html`
-      <div class="column">
+      <div
+        class="column ${isDragOver ? "drag-over" : ""}"
+        @dragover=${this._handleDragOver}
+        @dragenter=${() => this._handleDragEnterColumn(column.id)}
+        @dragleave=${this._handleDragLeaveColumn}
+        @drop=${(ev: DragEvent) => this._handleDrop(column.id, ev)}
+      >
         <div class="column-header">
           <div class="column-header-left">
             <span>${column.name}</span>
@@ -963,7 +1055,7 @@ export class DoBeeDoPanel extends LitElement {
             ×
           </button>
         </div>
-        <div class="tasks-list">
+        <div class="tasks-list ${isDragOver ? "drag-over" : ""}">
           ${tasksForColumn.length === 0
             ? html`<div class="empty-state" style="padding: 16px; font-size: 13px;">
                 No tasks yet
@@ -1097,8 +1189,15 @@ export class DoBeeDoPanel extends LitElement {
       `;
     }
 
+    const isDragging = this._draggingTaskId === task.id;
+
     return html`
-      <div class="task-card">
+      <div
+        class="task-card ${isDragging ? "dragging" : ""}"
+        draggable="true"
+        @dragstart=${(ev: DragEvent) => this._handleDragStart(task, ev)}
+        @dragend=${this._handleDragEnd}
+      >
         <div class="task-title">${task.title}</div>
         ${task.description ? html`<div class="task-description">${task.description}</div>` : ""}
         <div class="task-actions">
