@@ -106,6 +106,11 @@ export class DoBeeDoPanel extends LitElement {
         border: 1px solid var(--divider-color, #e0e0e0);
       }
 
+      button.warning {
+        background-color: var(--warning-color, #ff9800);
+        color: var(--text-primary-color, white);
+      }
+
       button.small {
         padding: 4px 8px;
         font-size: 12px;
@@ -525,14 +530,19 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  // TODO: REMOVE BEFORE RELEASE - Development helper only!
   private async _handlePopulateTestData(): Promise<void> {
     if (!this.hass) {
       return;
     }
 
+    // Always confirm since this is destructive
     if (
-      this._boards.length > 0 &&
-      !window.confirm("Test data can only be added to an empty board. Continue?")
+      !window.confirm(
+        "⚠️ WARNING: This will DELETE ALL existing boards, columns, and tasks!\n\n" +
+          "This is a development helper that clears everything and creates fresh test data.\n\n" +
+          "Are you sure you want to continue?",
+      )
     ) {
       return;
     }
@@ -556,14 +566,17 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   protected render(): TemplateResult {
+    // TODO: REMOVE BEFORE RELEASE - The test data button is dev-only
     return html`
       <h1>DoBeeDo</h1>
 
       <div class="flex-row mb-16">
-        <button class="primary" @click=${() => this._handlePopulateTestData()} ?disabled=${this._loading}>
-          Populate Test Data
+        <button class="warning" @click=${() => this._handlePopulateTestData()} ?disabled=${this._loading}>
+          ⚠️ Populate Test Data (DEV ONLY)
         </button>
-        <span class="helper-text">(Development helper - adds sample board with tasks)</span>
+        <span class="helper-text">
+          (Development helper - CLEARS ALL DATA and adds sample board. Remove before release!)
+        </span>
       </div>
 
       ${this._loading ? html`<p>Loading boards…</p>` : this._renderContent()}

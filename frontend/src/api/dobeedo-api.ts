@@ -237,6 +237,7 @@ export class DoBeeDoApiClient {
     };
   }
 
+  // TODO: REMOVE BEFORE RELEASE - Development helper only!
   public async populateTestData(): Promise<void> {
     await this.connection.sendMessagePromise<{ success: boolean }>({
       type: "dobeedo/populate_test_data",

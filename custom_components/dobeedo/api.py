@@ -337,8 +337,10 @@ async def websocket_populate_test_data(
 ) -> None:
     """Populate the board with sample test data.
 
-    This is a development/testing helper that creates a sample board
-    with columns and tasks if no data exists yet.
+    This is a development/testing helper that CLEARS ALL DATA and creates
+    a fresh sample board with columns and tasks.
+
+    TODO: REMOVE BEFORE RELEASE - This is a development helper only!
     """
 
     manager = _get_manager(hass)

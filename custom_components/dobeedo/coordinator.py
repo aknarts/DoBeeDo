@@ -62,16 +62,29 @@ class DobeeDoManager:
     # Storage helpers
     # ---------------------------------------------------------------------
 
+    async def async_clear_all_data(self) -> None:
+        """Clear all boards, columns, and tasks.
+
+        TODO: REMOVE BEFORE RELEASE - This is a development helper only!
+        """
+        self._boards.clear()
+        self._columns.clear()
+        self._tasks.clear()
+        self._ids.boards = 0
+        self._ids.columns = 0
+        self._ids.tasks = 0
+        await self.async_save_to_storage()
+
     async def async_populate_test_data(self) -> None:
         """Populate the board with sample data for testing.
 
-        This creates a sample board with multiple columns and tasks if
-        no boards exist yet. Useful for quick testing without manual setup.
+        This clears all existing data and creates a fresh sample board
+        with multiple columns and tasks. Useful for quick testing.
+
+        TODO: REMOVE BEFORE RELEASE - This is a development helper only!
         """
-        boards = await self.async_get_boards()
-        if boards:
-            # Don't populate if data already exists
-            return
+        # Clear existing data first
+        await self.async_clear_all_data()
 
         # Create a test board
         board = await self.async_create_board(
