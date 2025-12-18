@@ -1100,7 +1100,8 @@ export class DoBeeDoPanel extends LitElement {
     const tasksListEl = columnEl.querySelector('.tasks-list');
     if (!tasksListEl) return;
 
-    const taskElements = Array.from(tasksListEl.querySelectorAll('.task-card:not(.dragging)'));
+    // Query ALL tasks including the dragging one, so indices match render loop
+    const taskElements = Array.from(tasksListEl.querySelectorAll('.task-card'));
 
     if (taskElements.length === 0) {
       this._dropIndicatorPosition = { columnId, index: 0 };
@@ -1112,7 +1113,14 @@ export class DoBeeDoPanel extends LitElement {
     let dropIndex = taskElements.length; // Default to end
 
     for (let i = 0; i < taskElements.length; i++) {
-      const rect = taskElements[i].getBoundingClientRect();
+      const taskEl = taskElements[i];
+
+      // Skip the dragging task when calculating drop zones
+      if (taskEl.classList.contains('dragging')) {
+        continue;
+      }
+
+      const rect = taskEl.getBoundingClientRect();
       const taskMiddle = rect.top + rect.height / 2;
 
       // For each task, if touch is above its middle, drop before it
@@ -1141,10 +1149,11 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     const tasksListEl = ev.currentTarget as HTMLElement;
-    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card:not(.dragging)"));
+    // Query ALL tasks including the dragging one, so indices match render loop
+    const taskElements = Array.from(tasksListEl.querySelectorAll(".task-card"));
     const mouseY = ev.clientY;
 
-    // If there are no tasks, drop at position 0
+    // If there are no tasks (or only the dragging task), drop at position 0
     if (taskElements.length === 0) {
       this._dropIndicatorPosition = { columnId, index: 0 };
       return;
@@ -1155,7 +1164,14 @@ export class DoBeeDoPanel extends LitElement {
     let dropIndex = taskElements.length; // Default to end
 
     for (let i = 0; i < taskElements.length; i++) {
-      const rect = taskElements[i].getBoundingClientRect();
+      const taskEl = taskElements[i];
+
+      // Skip the dragging task when calculating drop zones
+      if (taskEl.classList.contains('dragging')) {
+        continue;
+      }
+
+      const rect = taskEl.getBoundingClientRect();
       const taskMiddle = rect.top + rect.height / 2;
 
       // For each task, if mouse is above its middle, drop before it
