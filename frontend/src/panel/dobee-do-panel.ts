@@ -1085,6 +1085,12 @@ export class DoBeeDoPanel extends LitElement {
     this._touchCurrentY = touch.clientY;
     this._touchDragging = true;
     this._draggingTaskId = task.id;
+
+    // Add global listeners now that drag has started
+    this._boundTouchMove = this._handleTouchMove.bind(this);
+    this._boundTouchEnd = this._handleTouchEnd.bind(this);
+    document.addEventListener('touchmove', this._boundTouchMove, { passive: false });
+    document.addEventListener('touchend', this._boundTouchEnd, { passive: false });
   }
 
   private _handleTouchMove(ev: TouchEvent): void {
@@ -1126,6 +1132,16 @@ export class DoBeeDoPanel extends LitElement {
     if (this._dropIndicatorPosition) {
       const dropEvent = new DragEvent('drop');
       void this._handleDrop(this._dropIndicatorPosition.columnId, dropEvent);
+    }
+
+    // Remove global listeners now that drag is done
+    if (this._boundTouchMove) {
+      document.removeEventListener('touchmove', this._boundTouchMove);
+      this._boundTouchMove = null;
+    }
+    if (this._boundTouchEnd) {
+      document.removeEventListener('touchend', this._boundTouchEnd);
+      this._boundTouchEnd = null;
     }
 
     // Clean up touch state
@@ -1540,11 +1556,8 @@ export class DoBeeDoPanel extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    // Add global touch event listeners for drag-and-drop
-    this._boundTouchMove = this._handleTouchMove.bind(this);
-    this._boundTouchEnd = this._handleTouchEnd.bind(this);
-    document.addEventListener('touchmove', this._boundTouchMove, { passive: false });
-    document.addEventListener('touchend', this._boundTouchEnd, { passive: false });
+    // Touch event listeners are now added dynamically in _handleTouchStart
+    // and removed in _handleTouchEnd to avoid scroll-blocking warnings
   }
 
   disconnectedCallback(): void {
@@ -1553,7 +1566,7 @@ export class DoBeeDoPanel extends LitElement {
       this._unsubscribeUpdates();
       this._unsubscribeUpdates = null;
     }
-    // Remove global touch event listeners
+    // Clean up touch event listeners if component is disconnected during drag
     if (this._boundTouchMove) {
       document.removeEventListener('touchmove', this._boundTouchMove);
       this._boundTouchMove = null;
