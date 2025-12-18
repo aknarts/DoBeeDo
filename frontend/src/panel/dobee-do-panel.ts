@@ -175,6 +175,7 @@ export class DoBeeDoPanel extends LitElement {
       .column {
         flex: 0 0 300px;
         background: var(--card-background-color);
+        border: 1px solid var(--divider-color);
         border-radius: var(--ha-card-border-radius, 8px);
         padding: 16px;
         box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,0.1));
@@ -207,23 +208,25 @@ export class DoBeeDoPanel extends LitElement {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
         min-height: 100px;
       }
 
       /* Task cards */
       .task-card {
-        background: var(--secondary-background-color, var(--card-background-color));
-        border: 1px solid var(--ha-card-border-color, var(--divider-color));
+        background: var(--card-background-color);
+        border: 2px solid var(--primary-color);
+        border-left: 4px solid var(--primary-color);
         border-radius: 6px;
         padding: 12px;
         cursor: pointer;
         transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
       }
 
       .task-card:hover {
-        border-color: var(--primary-color);
-        box-shadow: 0 2px 8px var(--ha-card-box-shadow, rgba(0,0,0,0.15));
+        border-color: var(--accent-color, var(--primary-color));
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         transform: translateY(-2px);
       }
 
