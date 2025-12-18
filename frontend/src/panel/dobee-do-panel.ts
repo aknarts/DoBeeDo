@@ -1984,8 +1984,6 @@ export class DoBeeDoPanel extends LitElement {
         @dragstart=${(ev: DragEvent) => this._handleDragStart(task, ev)}
         @dragend=${this._handleDragEnd}
         @touchstart=${(ev: TouchEvent) => this._handleTouchStart(task, ev)}
-        @touchmove=${(ev: TouchEvent) => this._handleTouchMove(ev)}
-        @touchend=${(ev: TouchEvent) => this._handleTouchEnd(ev)}
       >
         <div class="task-title">${task.title}</div>
         ${task.description ? html`<div class="task-description">${task.description}</div>` : ""}
