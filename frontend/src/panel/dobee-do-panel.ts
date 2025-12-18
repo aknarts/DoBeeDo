@@ -104,6 +104,9 @@ export class DoBeeDoPanel extends LitElement {
   @state()
   private _importStatusFilter: string = "";
 
+  @state()
+  private _touchDebugLog: string[] = [];
+
   private _boundTouchMove: ((ev: TouchEvent) => void) | null = null;
   private _boundTouchEnd: ((ev: TouchEvent) => void) | null = null;
 
@@ -690,6 +693,28 @@ export class DoBeeDoPanel extends LitElement {
         justify-content: flex-end;
         margin-top: 16px;
       }
+
+      /* Touch debug overlay */
+      .touch-debug-overlay {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        max-height: 150px;
+        background: rgba(0, 0, 0, 0.85);
+        color: #0f0;
+        font-family: monospace;
+        font-size: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        overflow-y: auto;
+        z-index: 9999;
+        pointer-events: none;
+      }
+
+      .touch-debug-overlay div {
+        margin-bottom: 2px;
+      }
     `;
   }
 
@@ -1002,9 +1027,16 @@ export class DoBeeDoPanel extends LitElement {
     this._dropIndicatorPosition = null;
   }
 
+  private _addTouchDebugLog(message: string): void {
+    const timestamp = new Date().toLocaleTimeString();
+    this._touchDebugLog = [...this._touchDebugLog, `[${timestamp}] ${message}`].slice(-20); // Keep last 20 messages
+  }
+
   private _handleTouchStart(task: DoBeeDoTaskSummary, ev: TouchEvent): void {
     // Prevent default to avoid scrolling while dragging
     ev.preventDefault();
+
+    this._addTouchDebugLog(`START: task ${task.id}`);
 
     const touch = ev.touches[0];
     this._touchStartY = touch.clientY;
@@ -1014,8 +1046,7 @@ export class DoBeeDoPanel extends LitElement {
     // Defer setting draggingTaskId to avoid re-render interfering with touch
     requestAnimationFrame(() => {
       this._draggingTaskId = task.id;
-      // eslint-disable-next-line no-console
-      console.log('[TOUCH] Started dragging task:', task.id);
+      this._addTouchDebugLog(`DRAG ACTIVE: ${task.id}`);
     });
 
     // Add global listeners now that drag has started
@@ -1027,6 +1058,7 @@ export class DoBeeDoPanel extends LitElement {
 
   private _handleTouchMove(ev: TouchEvent): void {
     if (!this._touchDragging || !this._draggingTaskId) {
+      this._addTouchDebugLog('MOVE: no drag or taskId');
       return;
     }
 
@@ -1048,36 +1080,33 @@ export class DoBeeDoPanel extends LitElement {
             this._dragOverColumnId = columnId;
             this._calculateTouchDropPosition(columnId, touch.clientY);
             foundColumn = true;
+            this._addTouchDebugLog(`MOVE: over ${columnId} idx=${this._dropIndicatorPosition?.index}`);
             break;
           }
         }
       }
     }
 
-    // Log occasionally for debugging (every 10th move to avoid spam)
-    if (!foundColumn && Math.random() < 0.1) {
-      // eslint-disable-next-line no-console
-      console.log('[TOUCH] Move - no column found at position', touch.clientX, touch.clientY);
+    if (!foundColumn) {
+      this._addTouchDebugLog(`MOVE: no column at ${touch.clientX},${touch.clientY}`);
     }
   }
 
   private _handleTouchEnd(ev: TouchEvent): void {
     if (!this._touchDragging || !this._draggingTaskId) {
+      this._addTouchDebugLog('END: no drag or taskId');
       return;
     }
 
     ev.preventDefault();
 
-    // eslint-disable-next-line no-console
-    console.log('[TOUCH] End - drop position:', this._dropIndicatorPosition);
-
     // Perform the drop if we have a valid drop position
     if (this._dropIndicatorPosition) {
+      this._addTouchDebugLog(`END: DROP at ${this._dropIndicatorPosition.columnId}[${this._dropIndicatorPosition.index}]`);
       const dropEvent = new DragEvent('drop');
       void this._handleDrop(this._dropIndicatorPosition.columnId, dropEvent);
     } else {
-      // eslint-disable-next-line no-console
-      console.log('[TOUCH] End - NO drop position, drag cancelled');
+      this._addTouchDebugLog('END: NO drop position - CANCELLED');
     }
 
     // Remove global listeners now that drag is done
@@ -1445,6 +1474,11 @@ export class DoBeeDoPanel extends LitElement {
       <h1>DoBeeDo</h1>
       ${this._loading ? html`<p>Loading boards…</p>` : this._renderContent()}
       ${this._importingColumnId ? this._renderImportDialog() : ""}
+      ${this._touchDebugLog.length > 0 ? html`
+        <div class="touch-debug-overlay">
+          ${this._touchDebugLog.map(log => html`<div>${log}</div>`)}
+        </div>
+      ` : ""}
     `;
   }
 
