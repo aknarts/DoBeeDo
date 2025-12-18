@@ -1025,6 +1025,7 @@ export class DoBeeDoPanel extends LitElement {
   }
 
   private _handleDragEnd(): void {
+    console.log("Drag end fired for task:", this._draggingTaskId);
     this._draggingTaskId = null;
     this._dragOverColumnId = null;
     this._dropIndicatorPosition = null;
@@ -2013,8 +2014,8 @@ export class DoBeeDoPanel extends LitElement {
             </div>`
           : ""}
         <div class="task-actions">
-          <button class="secondary small" @click=${() => this._startEditTask(task)}>Edit</button>
-          <button class="warning small" @click=${() => this._handleDeleteTask(task)}>Delete</button>
+          <button class="secondary small" draggable="false" @click=${() => this._startEditTask(task)}>Edit</button>
+          <button class="warning small" draggable="false" @click=${() => this._handleDeleteTask(task)}>Delete</button>
         </div>
       </div>
     `;
