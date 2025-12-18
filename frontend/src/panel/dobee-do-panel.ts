@@ -120,9 +120,9 @@ export class DoBeeDoPanel extends LitElement {
       /* Input fields */
       input, select {
         padding: 8px 12px;
-        border: 1px solid var(--divider-color);
+        border: 1px solid var(--input-idle-line-color, var(--divider-color));
         border-radius: 4px;
-        background: var(--card-background-color);
+        background: var(--input-fill-color, var(--secondary-background-color));
         color: var(--primary-text-color);
         font-size: 14px;
         font-family: inherit;
@@ -131,7 +131,7 @@ export class DoBeeDoPanel extends LitElement {
 
       input:focus, select:focus {
         outline: none;
-        border-color: var(--primary-color);
+        border-color: var(--input-hover-line-color, var(--primary-color));
       }
 
       /* Board selector */
@@ -146,7 +146,7 @@ export class DoBeeDoPanel extends LitElement {
         padding: 8px 16px;
         border-radius: 16px;
         background: var(--card-background-color);
-        border: 2px solid var(--divider-color);
+        border: 2px solid var(--ha-card-border-color, var(--divider-color));
         cursor: pointer;
         transition: all 0.2s ease;
         color: var(--primary-text-color);
@@ -197,7 +197,7 @@ export class DoBeeDoPanel extends LitElement {
         font-size: 12px;
         font-weight: 400;
         color: var(--secondary-text-color);
-        background: var(--divider-color);
+        background: var(--secondary-background-color, var(--divider-color));
         padding: 2px 8px;
         border-radius: 12px;
       }
@@ -213,8 +213,8 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Task cards */
       .task-card {
-        background: var(--primary-background-color);
-        border: 1px solid var(--divider-color);
+        background: var(--secondary-background-color, var(--card-background-color));
+        border: 1px solid var(--ha-card-border-color, var(--divider-color));
         border-radius: 6px;
         padding: 12px;
         cursor: pointer;

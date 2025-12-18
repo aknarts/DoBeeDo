@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HA Theme Variables Debug</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: var(--primary-background-color);
+      color: var(--primary-text-color);
+    }
+    .var-item {
+      display: flex;
+      gap: 16px;
+      padding: 8px;
+      margin: 4px 0;
+      border: 1px solid var(--divider-color);
+      border-radius: 4px;
+    }
+    .var-name {
+      font-family: monospace;
+      font-weight: bold;
+      min-width: 300px;
+    }
+    .var-value {
+      font-family: monospace;
+    }
+    .var-preview {
+      width: 50px;
+      height: 30px;
+      border: 1px solid #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Home Assistant Theme Variables</h1>
+  <div id="variables"></div>
+
+  <script>
+    // Common HA CSS variables to check
+    const commonVars = [
+      // Background colors
+      '--primary-background-color',
+      '--secondary-background-color',
+      '--card-background-color',
+      '--lovelace-background',
+
+      // Text colors
+      '--primary-text-color',
+      '--secondary-text-color',
+      '--text-primary-color',
+      '--disabled-text-color',
+
+      // UI colors
+      '--primary-color',
+      '--accent-color',
+      '--divider-color',
+      '--sidebar-background-color',
+
+      // State colors
+      '--state-icon-color',
+      '--state-active-color',
+      '--state-inactive-color',
+
+      // Warnings/errors
+      '--error-color',
+      '--warning-color',
+      '--success-color',
+      '--info-color',
+
+      // Cards
+      '--ha-card-background',
+      '--ha-card-border-color',
+      '--ha-card-border-radius',
+      '--ha-card-box-shadow',
+
+      // Inputs
+      '--input-fill-color',
+      '--input-disabled-fill-color',
+      '--input-dropdown-icon-color',
+      '--input-idle-line-color',
+      '--input-hover-line-color',
+
+      // Material colors
+      '--mdc-theme-primary',
+      '--mdc-theme-secondary',
+      '--mdc-theme-background',
+      '--mdc-theme-surface',
+      '--mdc-theme-on-primary',
+      '--mdc-theme-on-secondary',
+      '--mdc-theme-on-surface',
+
+      // Switches/toggles
+      '--switch-checked-color',
+      '--switch-unchecked-color',
+      '--switch-checked-button-color',
+      '--switch-unchecked-button-color',
+
+      // Paper colors (legacy but still used)
+      '--paper-item-icon-color',
+      '--paper-item-icon-active-color',
+      '--paper-listbox-background-color',
+    ];
+
+    const styles = getComputedStyle(document.documentElement);
+    const container = document.getElementById('variables');
+
+    commonVars.forEach(varName => {
+      const value = styles.getPropertyValue(varName).trim();
+
+      const item = document.createElement('div');
+      item.className = 'var-item';
+
+      const name = document.createElement('div');
+      name.className = 'var-name';
+      name.textContent = varName;
+
+      const val = document.createElement('div');
+      val.className = 'var-value';
+      val.textContent = value || '(not set)';
+
+      const preview = document.createElement('div');
+      preview.className = 'var-preview';
+      if (value && !value.includes('px') && !value.includes('em')) {
+        preview.style.background = value;
+      } else {
+        preview.textContent = '-';
+        preview.style.display = 'flex';
+        preview.style.alignItems = 'center';
+        preview.style.justifyContent = 'center';
+      }
+
+      item.appendChild(name);
+      item.appendChild(val);
+      item.appendChild(preview);
+      container.appendChild(item);
+    });
+  </script>
+</body>
+</html>
