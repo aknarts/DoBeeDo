@@ -284,12 +284,19 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Add column mock */
       .add-column-mock {
-        background: transparent;
-        border: 2px dashed var(--ha-color-border-neutral-normal, #7a7a7a);
-        min-height: 100px;
+        background: var(--card-background-color, #1c1c1c);
+        border: 2px dashed var(--ha-color-border-neutral-quiet, #5e5e5e);
+        opacity: 0.6;
+        min-height: 60px;
         display: flex;
         align-items: flex-start;
         justify-content: center;
+        transition: opacity 0.2s ease, border-color 0.2s ease;
+      }
+
+      .add-column-mock:hover {
+        opacity: 1;
+        border-color: var(--ha-color-border-neutral-normal, #7a7a7a);
       }
 
       .add-column-form {
@@ -300,13 +307,20 @@ export class DoBeeDoPanel extends LitElement {
       .add-column-input {
         width: 100%;
         margin-bottom: 8px;
-        text-align: center;
-        font-weight: 500;
+        background: transparent;
+        border: none;
+        font-size: 14px;
+        font-weight: 400;
+      }
+
+      .add-column-input:focus {
+        background: var(--input-fill-color, var(--secondary-background-color));
+        border: 1px solid var(--input-hover-line-color, var(--primary-color));
       }
 
       .add-column-input::placeholder {
         color: var(--secondary-text-color);
-        opacity: 0.7;
+        opacity: 0.8;
       }
 
       .add-column-buttons {
@@ -741,7 +755,7 @@ export class DoBeeDoPanel extends LitElement {
             type="text"
             class="add-column-input"
             .value=${this._newColumnName}
-            placeholder="+ Add column"
+            placeholder="Add column..."
             @input=${(ev: Event) => {
               const target = ev.target as HTMLInputElement;
               this._newColumnName = target.value;
@@ -756,7 +770,7 @@ export class DoBeeDoPanel extends LitElement {
             ? html`
                 <div class="add-column-buttons">
                   <button class="primary small" @click=${() => this._handleCreateColumn()}>
-                    Add Column
+                    Add
                   </button>
                   <button
                     class="secondary small"
