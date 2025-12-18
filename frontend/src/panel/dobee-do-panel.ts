@@ -168,7 +168,7 @@ export class DoBeeDoPanel extends LitElement {
         position: relative;
         padding: 12px 20px;
         cursor: pointer;
-        border-bottom: 2px solid transparent;
+        border-bottom: 3px solid transparent;
         margin-bottom: -2px;
         color: var(--secondary-text-color);
         font-size: 14px;
@@ -178,16 +178,19 @@ export class DoBeeDoPanel extends LitElement {
         display: flex;
         align-items: center;
         gap: 8px;
+        background: transparent;
       }
 
-      .board-tab:hover {
+      .board-tab:hover:not(.selected) {
         color: var(--primary-text-color);
-        background: var(--secondary-background-color);
+        background: var(--state-icon-hover-color);
       }
 
       .board-tab.selected {
         color: var(--primary-color);
         border-bottom-color: var(--primary-color);
+        background: var(--primary-background-color);
+        font-weight: 600;
       }
 
       .board-tab-delete {
@@ -265,11 +268,11 @@ export class DoBeeDoPanel extends LitElement {
 
       .column {
         flex: 0 0 300px;
-        background: var(--card-background-color, #1c1c1c);
-        border: 1px solid var(--ha-color-border-neutral-quiet, #5e5e5e);
-        border-radius: var(--ha-border-radius-md, 8px);
+        background: var(--card-background-color);
+        border: 1px solid var(--divider-color);
+        border-radius: var(--ha-card-border-radius, 8px);
         padding: 16px;
-        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
+        box-shadow: var(--ha-card-box-shadow);
         display: flex;
         flex-direction: column;
         max-height: calc(100vh - 300px);
@@ -295,7 +298,7 @@ export class DoBeeDoPanel extends LitElement {
         font-size: 12px;
         font-weight: 400;
         color: var(--secondary-text-color);
-        background: var(--secondary-background-color, var(--divider-color));
+        background: var(--secondary-background-color);
         padding: 2px 8px;
         border-radius: 12px;
       }
@@ -311,19 +314,19 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Task cards */
       .task-card {
-        background: var(--secondary-background-color, #282828);
-        border: 1px solid var(--ha-color-border-neutral-normal, #7a7a7a);
-        border-left: 3px solid var(--ha-color-border-neutral-loud, #b1b1b1);
+        background: var(--secondary-background-color);
+        border: 1px solid var(--divider-color);
+        border-left: 3px solid var(--divider-color);
         border-radius: 6px;
         padding: 12px;
         cursor: grab;
         transition: all 0.2s ease;
-        box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
+        box-shadow: var(--ha-card-box-shadow, none);
       }
 
       .task-card:hover {
         border-left-color: var(--primary-color);
-        box-shadow: var(--material-shadow-elevation-4dp, 0 4px 5px 0 rgba(0,0,0,0.14));
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         transform: translateY(-2px);
       }
 
@@ -363,7 +366,8 @@ export class DoBeeDoPanel extends LitElement {
         margin-bottom: 8px;
         padding: 4px 8px;
         border-radius: 4px;
-        background: var(--secondary-background-color, var(--divider-color));
+        background: var(--primary-background-color);
+        border: 1px solid var(--divider-color);
         display: inline-block;
       }
 
@@ -387,7 +391,7 @@ export class DoBeeDoPanel extends LitElement {
       .add-task-form {
         margin-top: 8px;
         padding: 8px;
-        border-top: 1px solid var(--ha-color-border-neutral-quiet, #5e5e5e);
+        border-top: 1px solid var(--divider-color);
       }
 
       .add-task-input {
@@ -408,8 +412,8 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Add column mock */
       .add-column-mock {
-        background: var(--card-background-color, #1c1c1c);
-        border: 2px dashed var(--ha-color-border-neutral-quiet, #5e5e5e);
+        background: var(--card-background-color);
+        border: 2px dashed var(--divider-color);
         opacity: 0.6;
         min-height: 60px;
         display: flex;
@@ -420,7 +424,7 @@ export class DoBeeDoPanel extends LitElement {
 
       .add-column-mock:hover {
         opacity: 1;
-        border-color: var(--ha-color-border-neutral-normal, #7a7a7a);
+        border-color: var(--primary-color);
       }
 
       .add-column-form {
