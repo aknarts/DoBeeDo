@@ -2,33 +2,33 @@
  * @license
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */var pt;const O=globalThis,j=O.ShadowRoot&&(O.ShadyCSS===void 0||O.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,W=Symbol(),Z=new WeakMap;let G=class{constructor(t,e,s){if(this._$cssResult$=!0,s!==W)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=t,this.t=e}get styleSheet(){let t=this.o;const e=this.t;if(j&&t===void 0){const s=e!==void 0&&e.length===1;s&&(t=Z.get(e)),t===void 0&&((this.o=t=new CSSStyleSheet).replaceSync(this.cssText),s&&Z.set(e,t))}return t}toString(){return this.cssText}};const ut=i=>new G(typeof i=="string"?i:i+"",void 0,W),_t=(i,...t)=>{const e=i.length===1?i[0]:t.reduce((s,o,r)=>s+(n=>{if(n._$cssResult$===!0)return n.cssText;if(typeof n=="number")return n;throw Error("Value passed to 'css' function must be a 'css' function result: "+n+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(o)+i[r+1],i[0]);return new G(e,i,W)},mt=(i,t)=>{if(j)i.adoptedStyleSheets=t.map(e=>e instanceof CSSStyleSheet?e:e.styleSheet);else for(const e of t){const s=document.createElement("style"),o=O.litNonce;o!==void 0&&s.setAttribute("nonce",o),s.textContent=e.cssText,i.appendChild(s)}},Q=j?i=>i:i=>i instanceof CSSStyleSheet?(t=>{let e="";for(const s of t.cssRules)e+=s.cssText;return ut(e)})(i):i;/**
+ */var pe;const O=globalThis,j=O.ShadowRoot&&(O.ShadyCSS===void 0||O.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,F=Symbol(),Z=new WeakMap;let G=class{constructor(e,t,s){if(this._$cssResult$=!0,s!==F)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=e,this.t=t}get styleSheet(){let e=this.o;const t=this.t;if(j&&e===void 0){const s=t!==void 0&&t.length===1;s&&(e=Z.get(t)),e===void 0&&((this.o=e=new CSSStyleSheet).replaceSync(this.cssText),s&&Z.set(t,e))}return e}toString(){return this.cssText}};const ue=o=>new G(typeof o=="string"?o:o+"",void 0,F),_e=(o,...e)=>{const t=o.length===1?o[0]:e.reduce((s,i,r)=>s+(a=>{if(a._$cssResult$===!0)return a.cssText;if(typeof a=="number")return a;throw Error("Value passed to 'css' function must be a 'css' function result: "+a+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(i)+o[r+1],o[0]);return new G(t,o,F)},me=(o,e)=>{if(j)o.adoptedStyleSheets=e.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(const t of e){const s=document.createElement("style"),i=O.litNonce;i!==void 0&&s.setAttribute("nonce",i),s.textContent=t.cssText,o.appendChild(s)}},Q=j?o=>o:o=>o instanceof CSSStyleSheet?(e=>{let t="";for(const s of e.cssRules)t+=s.cssText;return ue(t)})(o):o;/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */const{is:bt,defineProperty:ft,getOwnPropertyDescriptor:vt,getOwnPropertyNames:yt,getOwnPropertySymbols:gt,getPrototypeOf:$t}=Object,y=globalThis,X=y.trustedTypes,kt=X?X.emptyScript:"",F=y.reactiveElementPolyfillSupport,D=(i,t)=>i,H={toAttribute(i,t){switch(t){case Boolean:i=i?kt:null;break;case Object:case Array:i=i==null?i:JSON.stringify(i)}return i},fromAttribute(i,t){let e=i;switch(t){case Boolean:e=i!==null;break;case Number:e=i===null?null:Number(i);break;case Object:case Array:try{e=JSON.parse(i)}catch{e=null}}return e}},q=(i,t)=>!bt(i,t),tt={attribute:!0,type:String,converter:H,reflect:!1,useDefault:!1,hasChanged:q};Symbol.metadata??(Symbol.metadata=Symbol("metadata")),y.litPropertyMetadata??(y.litPropertyMetadata=new WeakMap);let T=class extends HTMLElement{static addInitializer(t){this._$Ei(),(this.l??(this.l=[])).push(t)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(t,e=tt){if(e.state&&(e.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(t)&&((e=Object.create(e)).wrapped=!0),this.elementProperties.set(t,e),!e.noAccessor){const s=Symbol(),o=this.getPropertyDescriptor(t,s,e);o!==void 0&&ft(this.prototype,t,o)}}static getPropertyDescriptor(t,e,s){const{get:o,set:r}=vt(this.prototype,t)??{get(){return this[e]},set(n){this[e]=n}};return{get:o,set(n){const d=o==null?void 0:o.call(this);r==null||r.call(this,n),this.requestUpdate(t,d,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(t){return this.elementProperties.get(t)??tt}static _$Ei(){if(this.hasOwnProperty(D("elementProperties")))return;const t=$t(this);t.finalize(),t.l!==void 0&&(this.l=[...t.l]),this.elementProperties=new Map(t.elementProperties)}static finalize(){if(this.hasOwnProperty(D("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(D("properties"))){const e=this.properties,s=[...yt(e),...gt(e)];for(const o of s)this.createProperty(o,e[o])}const t=this[Symbol.metadata];if(t!==null){const e=litPropertyMetadata.get(t);if(e!==void 0)for(const[s,o]of e)this.elementProperties.set(s,o)}this._$Eh=new Map;for(const[e,s]of this.elementProperties){const o=this._$Eu(e,s);o!==void 0&&this._$Eh.set(o,e)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(t){const e=[];if(Array.isArray(t)){const s=new Set(t.flat(1/0).reverse());for(const o of s)e.unshift(Q(o))}else t!==void 0&&e.push(Q(t));return e}static _$Eu(t,e){const s=e.attribute;return s===!1?void 0:typeof s=="string"?s:typeof t=="string"?t.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){var t;this._$ES=new Promise(e=>this.enableUpdating=e),this._$AL=new Map,this._$E_(),this.requestUpdate(),(t=this.constructor.l)==null||t.forEach(e=>e(this))}addController(t){var e;(this._$EO??(this._$EO=new Set)).add(t),this.renderRoot!==void 0&&this.isConnected&&((e=t.hostConnected)==null||e.call(t))}removeController(t){var e;(e=this._$EO)==null||e.delete(t)}_$E_(){const t=new Map,e=this.constructor.elementProperties;for(const s of e.keys())this.hasOwnProperty(s)&&(t.set(s,this[s]),delete this[s]);t.size>0&&(this._$Ep=t)}createRenderRoot(){const t=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return mt(t,this.constructor.elementStyles),t}connectedCallback(){var t;this.renderRoot??(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),(t=this._$EO)==null||t.forEach(e=>{var s;return(s=e.hostConnected)==null?void 0:s.call(e)})}enableUpdating(t){}disconnectedCallback(){var t;(t=this._$EO)==null||t.forEach(e=>{var s;return(s=e.hostDisconnected)==null?void 0:s.call(e)})}attributeChangedCallback(t,e,s){this._$AK(t,s)}_$ET(t,e){var r;const s=this.constructor.elementProperties.get(t),o=this.constructor._$Eu(t,s);if(o!==void 0&&s.reflect===!0){const n=(((r=s.converter)==null?void 0:r.toAttribute)!==void 0?s.converter:H).toAttribute(e,s.type);this._$Em=t,n==null?this.removeAttribute(o):this.setAttribute(o,n),this._$Em=null}}_$AK(t,e){var r,n;const s=this.constructor,o=s._$Eh.get(t);if(o!==void 0&&this._$Em!==o){const d=s.getPropertyOptions(o),a=typeof d.converter=="function"?{fromAttribute:d.converter}:((r=d.converter)==null?void 0:r.fromAttribute)!==void 0?d.converter:H;this._$Em=o;const c=a.fromAttribute(e,d.type);this[o]=c??((n=this._$Ej)==null?void 0:n.get(o))??c,this._$Em=null}}requestUpdate(t,e,s){var o;if(t!==void 0){const r=this.constructor,n=this[t];if(s??(s=r.getPropertyOptions(t)),!((s.hasChanged??q)(n,e)||s.useDefault&&s.reflect&&n===((o=this._$Ej)==null?void 0:o.get(t))&&!this.hasAttribute(r._$Eu(t,s))))return;this.C(t,e,s)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(t,e,{useDefault:s,reflect:o,wrapped:r},n){s&&!(this._$Ej??(this._$Ej=new Map)).has(t)&&(this._$Ej.set(t,n??e??this[t]),r!==!0||n!==void 0)||(this._$AL.has(t)||(this.hasUpdated||s||(e=void 0),this._$AL.set(t,e)),o===!0&&this._$Em!==t&&(this._$Eq??(this._$Eq=new Set)).add(t))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(e){Promise.reject(e)}const t=this.scheduleUpdate();return t!=null&&await t,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){var s;if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??(this.renderRoot=this.createRenderRoot()),this._$Ep){for(const[r,n]of this._$Ep)this[r]=n;this._$Ep=void 0}const o=this.constructor.elementProperties;if(o.size>0)for(const[r,n]of o){const{wrapped:d}=n,a=this[r];d!==!0||this._$AL.has(r)||a===void 0||this.C(r,void 0,n,a)}}let t=!1;const e=this._$AL;try{t=this.shouldUpdate(e),t?(this.willUpdate(e),(s=this._$EO)==null||s.forEach(o=>{var r;return(r=o.hostUpdate)==null?void 0:r.call(o)}),this.update(e)):this._$EM()}catch(o){throw t=!1,this._$EM(),o}t&&this._$AE(e)}willUpdate(t){}_$AE(t){var e;(e=this._$EO)==null||e.forEach(s=>{var o;return(o=s.hostUpdated)==null?void 0:o.call(s)}),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(t)),this.updated(t)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(t){return!0}update(t){this._$Eq&&(this._$Eq=this._$Eq.forEach(e=>this._$ET(e,this[e]))),this._$EM()}updated(t){}firstUpdated(t){}};T.elementStyles=[],T.shadowRootOptions={mode:"open"},T[D("elementProperties")]=new Map,T[D("finalized")]=new Map,F==null||F({ReactiveElement:T}),(y.reactiveElementVersions??(y.reactiveElementVersions=[])).push("2.1.1");/**
+ */const{is:be,defineProperty:fe,getOwnPropertyDescriptor:ye,getOwnPropertyNames:ve,getOwnPropertySymbols:ge,getPrototypeOf:$e}=Object,v=globalThis,X=v.trustedTypes,xe=X?X.emptyScript:"",W=v.reactiveElementPolyfillSupport,D=(o,e)=>o,H={toAttribute(o,e){switch(e){case Boolean:o=o?xe:null;break;case Object:case Array:o=o==null?o:JSON.stringify(o)}return o},fromAttribute(o,e){let t=o;switch(e){case Boolean:t=o!==null;break;case Number:t=o===null?null:Number(o);break;case Object:case Array:try{t=JSON.parse(o)}catch{t=null}}return t}},q=(o,e)=>!be(o,e),ee={attribute:!0,type:String,converter:H,reflect:!1,useDefault:!1,hasChanged:q};Symbol.metadata??(Symbol.metadata=Symbol("metadata")),v.litPropertyMetadata??(v.litPropertyMetadata=new WeakMap);let T=class extends HTMLElement{static addInitializer(e){this._$Ei(),(this.l??(this.l=[])).push(e)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(e,t=ee){if(t.state&&(t.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(e)&&((t=Object.create(t)).wrapped=!0),this.elementProperties.set(e,t),!t.noAccessor){const s=Symbol(),i=this.getPropertyDescriptor(e,s,t);i!==void 0&&fe(this.prototype,e,i)}}static getPropertyDescriptor(e,t,s){const{get:i,set:r}=ye(this.prototype,e)??{get(){return this[t]},set(a){this[t]=a}};return{get:i,set(a){const d=i==null?void 0:i.call(this);r==null||r.call(this,a),this.requestUpdate(e,d,s)},configurable:!0,enumerable:!0}}static getPropertyOptions(e){return this.elementProperties.get(e)??ee}static _$Ei(){if(this.hasOwnProperty(D("elementProperties")))return;const e=$e(this);e.finalize(),e.l!==void 0&&(this.l=[...e.l]),this.elementProperties=new Map(e.elementProperties)}static finalize(){if(this.hasOwnProperty(D("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(D("properties"))){const t=this.properties,s=[...ve(t),...ge(t)];for(const i of s)this.createProperty(i,t[i])}const e=this[Symbol.metadata];if(e!==null){const t=litPropertyMetadata.get(e);if(t!==void 0)for(const[s,i]of t)this.elementProperties.set(s,i)}this._$Eh=new Map;for(const[t,s]of this.elementProperties){const i=this._$Eu(t,s);i!==void 0&&this._$Eh.set(i,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(e){const t=[];if(Array.isArray(e)){const s=new Set(e.flat(1/0).reverse());for(const i of s)t.unshift(Q(i))}else e!==void 0&&t.push(Q(e));return t}static _$Eu(e,t){const s=t.attribute;return s===!1?void 0:typeof s=="string"?s:typeof e=="string"?e.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){var e;this._$ES=new Promise(t=>this.enableUpdating=t),this._$AL=new Map,this._$E_(),this.requestUpdate(),(e=this.constructor.l)==null||e.forEach(t=>t(this))}addController(e){var t;(this._$EO??(this._$EO=new Set)).add(e),this.renderRoot!==void 0&&this.isConnected&&((t=e.hostConnected)==null||t.call(e))}removeController(e){var t;(t=this._$EO)==null||t.delete(e)}_$E_(){const e=new Map,t=this.constructor.elementProperties;for(const s of t.keys())this.hasOwnProperty(s)&&(e.set(s,this[s]),delete this[s]);e.size>0&&(this._$Ep=e)}createRenderRoot(){const e=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return me(e,this.constructor.elementStyles),e}connectedCallback(){var e;this.renderRoot??(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),(e=this._$EO)==null||e.forEach(t=>{var s;return(s=t.hostConnected)==null?void 0:s.call(t)})}enableUpdating(e){}disconnectedCallback(){var e;(e=this._$EO)==null||e.forEach(t=>{var s;return(s=t.hostDisconnected)==null?void 0:s.call(t)})}attributeChangedCallback(e,t,s){this._$AK(e,s)}_$ET(e,t){var r;const s=this.constructor.elementProperties.get(e),i=this.constructor._$Eu(e,s);if(i!==void 0&&s.reflect===!0){const a=(((r=s.converter)==null?void 0:r.toAttribute)!==void 0?s.converter:H).toAttribute(t,s.type);this._$Em=e,a==null?this.removeAttribute(i):this.setAttribute(i,a),this._$Em=null}}_$AK(e,t){var r,a;const s=this.constructor,i=s._$Eh.get(e);if(i!==void 0&&this._$Em!==i){const d=s.getPropertyOptions(i),n=typeof d.converter=="function"?{fromAttribute:d.converter}:((r=d.converter)==null?void 0:r.fromAttribute)!==void 0?d.converter:H;this._$Em=i;const c=n.fromAttribute(t,d.type);this[i]=c??((a=this._$Ej)==null?void 0:a.get(i))??c,this._$Em=null}}requestUpdate(e,t,s){var i;if(e!==void 0){const r=this.constructor,a=this[e];if(s??(s=r.getPropertyOptions(e)),!((s.hasChanged??q)(a,t)||s.useDefault&&s.reflect&&a===((i=this._$Ej)==null?void 0:i.get(e))&&!this.hasAttribute(r._$Eu(e,s))))return;this.C(e,t,s)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(e,t,{useDefault:s,reflect:i,wrapped:r},a){s&&!(this._$Ej??(this._$Ej=new Map)).has(e)&&(this._$Ej.set(e,a??t??this[e]),r!==!0||a!==void 0)||(this._$AL.has(e)||(this.hasUpdated||s||(t=void 0),this._$AL.set(e,t)),i===!0&&this._$Em!==e&&(this._$Eq??(this._$Eq=new Set)).add(e))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}const e=this.scheduleUpdate();return e!=null&&await e,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){var s;if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??(this.renderRoot=this.createRenderRoot()),this._$Ep){for(const[r,a]of this._$Ep)this[r]=a;this._$Ep=void 0}const i=this.constructor.elementProperties;if(i.size>0)for(const[r,a]of i){const{wrapped:d}=a,n=this[r];d!==!0||this._$AL.has(r)||n===void 0||this.C(r,void 0,a,n)}}let e=!1;const t=this._$AL;try{e=this.shouldUpdate(t),e?(this.willUpdate(t),(s=this._$EO)==null||s.forEach(i=>{var r;return(r=i.hostUpdate)==null?void 0:r.call(i)}),this.update(t)):this._$EM()}catch(i){throw e=!1,this._$EM(),i}e&&this._$AE(t)}willUpdate(e){}_$AE(e){var t;(t=this._$EO)==null||t.forEach(s=>{var i;return(i=s.hostUpdated)==null?void 0:i.call(s)}),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(e)),this.updated(e)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(e){return!0}update(e){this._$Eq&&(this._$Eq=this._$Eq.forEach(t=>this._$ET(t,this[t]))),this._$EM()}updated(e){}firstUpdated(e){}};T.elementStyles=[],T.shadowRootOptions={mode:"open"},T[D("elementProperties")]=new Map,T[D("finalized")]=new Map,W==null||W({ReactiveElement:T}),(v.reactiveElementVersions??(v.reactiveElementVersions=[])).push("2.1.1");/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */const S=globalThis,R=S.trustedTypes,et=R?R.createPolicy("lit-html",{createHTML:i=>i}):void 0,st="$lit$",g=`lit$${Math.random().toFixed(9).slice(2)}$`,it="?"+g,xt=`<${it}>`,k=document,B=()=>k.createComment(""),P=i=>i===null||typeof i!="object"&&typeof i!="function",V=Array.isArray,wt=i=>V(i)||typeof(i==null?void 0:i[Symbol.iterator])=="function",Y=`[ 	
-\f\r]`,M=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,ot=/-->/g,rt=/>/g,x=RegExp(`>|${Y}(?:([^\\s"'>=/]+)(${Y}*=${Y}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`,"g"),nt=/'/g,at=/"/g,dt=/^(?:script|style|textarea|title)$/i,At=i=>(t,...e)=>({_$litType$:i,strings:t,values:e}),h=At(1),E=Symbol.for("lit-noChange"),p=Symbol.for("lit-nothing"),lt=new WeakMap,w=k.createTreeWalker(k,129);function ct(i,t){if(!V(i)||!i.hasOwnProperty("raw"))throw Error("invalid template strings array");return et!==void 0?et.createHTML(t):t}const Tt=(i,t)=>{const e=i.length-1,s=[];let o,r=t===2?"<svg>":t===3?"<math>":"",n=M;for(let d=0;d<e;d++){const a=i[d];let c,_,l=-1,v=0;for(;v<a.length&&(n.lastIndex=v,_=n.exec(a),_!==null);)v=n.lastIndex,n===M?_[1]==="!--"?n=ot:_[1]!==void 0?n=rt:_[2]!==void 0?(dt.test(_[2])&&(o=RegExp("</"+_[2],"g")),n=x):_[3]!==void 0&&(n=x):n===x?_[0]===">"?(n=o??M,l=-1):_[1]===void 0?l=-2:(l=n.lastIndex-_[2].length,c=_[1],n=_[3]===void 0?x:_[3]==='"'?at:nt):n===at||n===nt?n=x:n===ot||n===rt?n=M:(n=x,o=void 0);const $=n===x&&i[d+1].startsWith("/>")?" ":"";r+=n===M?a+xt:l>=0?(s.push(c),a.slice(0,l)+st+a.slice(l)+g+$):a+g+(l===-2?d:$)}return[ct(i,r+(i[e]||"<?>")+(t===2?"</svg>":t===3?"</math>":"")),s]};class U{constructor({strings:t,_$litType$:e},s){let o;this.parts=[];let r=0,n=0;const d=t.length-1,a=this.parts,[c,_]=Tt(t,e);if(this.el=U.createElement(c,s),w.currentNode=this.el.content,e===2||e===3){const l=this.el.content.firstChild;l.replaceWith(...l.childNodes)}for(;(o=w.nextNode())!==null&&a.length<d;){if(o.nodeType===1){if(o.hasAttributes())for(const l of o.getAttributeNames())if(l.endsWith(st)){const v=_[n++],$=o.getAttribute(l).split(g),L=/([.?@])?(.*)/.exec(v);a.push({type:1,index:r,name:L[2],strings:$,ctor:L[1]==="."?Ct:L[1]==="?"?Dt:L[1]==="@"?St:z}),o.removeAttribute(l)}else l.startsWith(g)&&(a.push({type:6,index:r}),o.removeAttribute(l));if(dt.test(o.tagName)){const l=o.textContent.split(g),v=l.length-1;if(v>0){o.textContent=R?R.emptyScript:"";for(let $=0;$<v;$++)o.append(l[$],B()),w.nextNode(),a.push({type:2,index:++r});o.append(l[v],B())}}}else if(o.nodeType===8)if(o.data===it)a.push({type:2,index:r});else{let l=-1;for(;(l=o.data.indexOf(g,l+1))!==-1;)a.push({type:7,index:r}),l+=g.length-1}r++}}static createElement(t,e){const s=k.createElement("template");return s.innerHTML=t,s}}function C(i,t,e=i,s){var n,d;if(t===E)return t;let o=s!==void 0?(n=e._$Co)==null?void 0:n[s]:e._$Cl;const r=P(t)?void 0:t._$litDirective$;return(o==null?void 0:o.constructor)!==r&&((d=o==null?void 0:o._$AO)==null||d.call(o,!1),r===void 0?o=void 0:(o=new r(i),o._$AT(i,e,s)),s!==void 0?(e._$Co??(e._$Co=[]))[s]=o:e._$Cl=o),o!==void 0&&(t=C(i,o._$AS(i,t.values),o,s)),t}class Et{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:e},parts:s}=this._$AD,o=((t==null?void 0:t.creationScope)??k).importNode(e,!0);w.currentNode=o;let r=w.nextNode(),n=0,d=0,a=s[0];for(;a!==void 0;){if(n===a.index){let c;a.type===2?c=new I(r,r.nextSibling,this,t):a.type===1?c=new a.ctor(r,a.name,a.strings,this,t):a.type===6&&(c=new Bt(r,this,t)),this._$AV.push(c),a=s[++d]}n!==(a==null?void 0:a.index)&&(r=w.nextNode(),n++)}return w.currentNode=k,o}p(t){let e=0;for(const s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(t,s,e),e+=s.strings.length-2):s._$AI(t[e])),e++}}class I{get _$AU(){var t;return((t=this._$AM)==null?void 0:t._$AU)??this._$Cv}constructor(t,e,s,o){this.type=2,this._$AH=p,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=s,this.options=o,this._$Cv=(o==null?void 0:o.isConnected)??!0}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return e!==void 0&&(t==null?void 0:t.nodeType)===11&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=C(this,t,e),P(t)?t===p||t==null||t===""?(this._$AH!==p&&this._$AR(),this._$AH=p):t!==this._$AH&&t!==E&&this._(t):t._$litType$!==void 0?this.$(t):t.nodeType!==void 0?this.T(t):wt(t)?this.k(t):this._(t)}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t))}_(t){this._$AH!==p&&P(this._$AH)?this._$AA.nextSibling.data=t:this.T(k.createTextNode(t)),this._$AH=t}$(t){var r;const{values:e,_$litType$:s}=t,o=typeof s=="number"?this._$AC(t):(s.el===void 0&&(s.el=U.createElement(ct(s.h,s.h[0]),this.options)),s);if(((r=this._$AH)==null?void 0:r._$AD)===o)this._$AH.p(e);else{const n=new Et(o,this),d=n.u(this.options);n.p(e),this.T(d),this._$AH=n}}_$AC(t){let e=lt.get(t.strings);return e===void 0&&lt.set(t.strings,e=new U(t)),e}k(t){V(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let s,o=0;for(const r of t)o===e.length?e.push(s=new I(this.O(B()),this.O(B()),this,this.options)):s=e[o],s._$AI(r),o++;o<e.length&&(this._$AR(s&&s._$AB.nextSibling,o),e.length=o)}_$AR(t=this._$AA.nextSibling,e){var s;for((s=this._$AP)==null?void 0:s.call(this,!1,!0,e);t!==this._$AB;){const o=t.nextSibling;t.remove(),t=o}}setConnected(t){var e;this._$AM===void 0&&(this._$Cv=t,(e=this._$AP)==null||e.call(this,t))}}class z{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,e,s,o,r){this.type=1,this._$AH=p,this._$AN=void 0,this.element=t,this.name=e,this._$AM=o,this.options=r,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=p}_$AI(t,e=this,s,o){const r=this.strings;let n=!1;if(r===void 0)t=C(this,t,e,0),n=!P(t)||t!==this._$AH&&t!==E,n&&(this._$AH=t);else{const d=t;let a,c;for(t=r[0],a=0;a<r.length-1;a++)c=C(this,d[s+a],e,a),c===E&&(c=this._$AH[a]),n||(n=!P(c)||c!==this._$AH[a]),c===p?t=p:t!==p&&(t+=(c??"")+r[a+1]),this._$AH[a]=c}n&&!o&&this.j(t)}j(t){t===p?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"")}}class Ct extends z{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===p?void 0:t}}class Dt extends z{constructor(){super(...arguments),this.type=4}j(t){this.element.toggleAttribute(this.name,!!t&&t!==p)}}class St extends z{constructor(t,e,s,o,r){super(t,e,s,o,r),this.type=5}_$AI(t,e=this){if((t=C(this,t,e,0)??p)===E)return;const s=this._$AH,o=t===p&&s!==p||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,r=t!==p&&(s===p||o);o&&this.element.removeEventListener(this.name,this,s),r&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){var e;typeof this._$AH=="function"?this._$AH.call(((e=this.options)==null?void 0:e.host)??this.element,t):this._$AH.handleEvent(t)}}class Bt{constructor(t,e,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(t){C(this,t)}}const J=S.litHtmlPolyfillSupport;J==null||J(U,I),(S.litHtmlVersions??(S.litHtmlVersions=[])).push("3.3.1");const Pt=(i,t,e)=>{const s=(e==null?void 0:e.renderBefore)??t;let o=s._$litPart$;if(o===void 0){const r=(e==null?void 0:e.renderBefore)??null;s._$litPart$=o=new I(t.insertBefore(B(),r),r,void 0,e??{})}return o._$AI(i),o};/**
+ */const B=globalThis,R=B.trustedTypes,te=R?R.createPolicy("lit-html",{createHTML:o=>o}):void 0,se="$lit$",g=`lit$${Math.random().toFixed(9).slice(2)}$`,oe="?"+g,ke=`<${oe}>`,x=document,S=()=>x.createComment(""),P=o=>o===null||typeof o!="object"&&typeof o!="function",V=Array.isArray,we=o=>V(o)||typeof(o==null?void 0:o[Symbol.iterator])=="function",Y=`[ 	
+\f\r]`,M=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,ie=/-->/g,re=/>/g,k=RegExp(`>|${Y}(?:([^\\s"'>=/]+)(${Y}*=${Y}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`,"g"),ae=/'/g,ne=/"/g,de=/^(?:script|style|textarea|title)$/i,Ae=o=>(e,...t)=>({_$litType$:o,strings:e,values:t}),h=Ae(1),C=Symbol.for("lit-noChange"),p=Symbol.for("lit-nothing"),le=new WeakMap,w=x.createTreeWalker(x,129);function ce(o,e){if(!V(o)||!o.hasOwnProperty("raw"))throw Error("invalid template strings array");return te!==void 0?te.createHTML(e):e}const Te=(o,e)=>{const t=o.length-1,s=[];let i,r=e===2?"<svg>":e===3?"<math>":"",a=M;for(let d=0;d<t;d++){const n=o[d];let c,m,l=-1,y=0;for(;y<n.length&&(a.lastIndex=y,m=a.exec(n),m!==null);)y=a.lastIndex,a===M?m[1]==="!--"?a=ie:m[1]!==void 0?a=re:m[2]!==void 0?(de.test(m[2])&&(i=RegExp("</"+m[2],"g")),a=k):m[3]!==void 0&&(a=k):a===k?m[0]===">"?(a=i??M,l=-1):m[1]===void 0?l=-2:(l=a.lastIndex-m[2].length,c=m[1],a=m[3]===void 0?k:m[3]==='"'?ne:ae):a===ne||a===ae?a=k:a===ie||a===re?a=M:(a=k,i=void 0);const $=a===k&&o[d+1].startsWith("/>")?" ":"";r+=a===M?n+ke:l>=0?(s.push(c),n.slice(0,l)+se+n.slice(l)+g+$):n+g+(l===-2?d:$)}return[ce(o,r+(o[t]||"<?>")+(e===2?"</svg>":e===3?"</math>":"")),s]};class N{constructor({strings:e,_$litType$:t},s){let i;this.parts=[];let r=0,a=0;const d=e.length-1,n=this.parts,[c,m]=Te(e,t);if(this.el=N.createElement(c,s),w.currentNode=this.el.content,t===2||t===3){const l=this.el.content.firstChild;l.replaceWith(...l.childNodes)}for(;(i=w.nextNode())!==null&&n.length<d;){if(i.nodeType===1){if(i.hasAttributes())for(const l of i.getAttributeNames())if(l.endsWith(se)){const y=m[a++],$=i.getAttribute(l).split(g),L=/([.?@])?(.*)/.exec(y);n.push({type:1,index:r,name:L[2],strings:$,ctor:L[1]==="."?Ee:L[1]==="?"?De:L[1]==="@"?Be:z}),i.removeAttribute(l)}else l.startsWith(g)&&(n.push({type:6,index:r}),i.removeAttribute(l));if(de.test(i.tagName)){const l=i.textContent.split(g),y=l.length-1;if(y>0){i.textContent=R?R.emptyScript:"";for(let $=0;$<y;$++)i.append(l[$],S()),w.nextNode(),n.push({type:2,index:++r});i.append(l[y],S())}}}else if(i.nodeType===8)if(i.data===oe)n.push({type:2,index:r});else{let l=-1;for(;(l=i.data.indexOf(g,l+1))!==-1;)n.push({type:7,index:r}),l+=g.length-1}r++}}static createElement(e,t){const s=x.createElement("template");return s.innerHTML=e,s}}function E(o,e,t=o,s){var a,d;if(e===C)return e;let i=s!==void 0?(a=t._$Co)==null?void 0:a[s]:t._$Cl;const r=P(e)?void 0:e._$litDirective$;return(i==null?void 0:i.constructor)!==r&&((d=i==null?void 0:i._$AO)==null||d.call(i,!1),r===void 0?i=void 0:(i=new r(o),i._$AT(o,t,s)),s!==void 0?(t._$Co??(t._$Co=[]))[s]=i:t._$Cl=i),i!==void 0&&(e=E(o,i._$AS(o,e.values),i,s)),e}class Ce{constructor(e,t){this._$AV=[],this._$AN=void 0,this._$AD=e,this._$AM=t}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(e){const{el:{content:t},parts:s}=this._$AD,i=((e==null?void 0:e.creationScope)??x).importNode(t,!0);w.currentNode=i;let r=w.nextNode(),a=0,d=0,n=s[0];for(;n!==void 0;){if(a===n.index){let c;n.type===2?c=new U(r,r.nextSibling,this,e):n.type===1?c=new n.ctor(r,n.name,n.strings,this,e):n.type===6&&(c=new Se(r,this,e)),this._$AV.push(c),n=s[++d]}a!==(n==null?void 0:n.index)&&(r=w.nextNode(),a++)}return w.currentNode=x,i}p(e){let t=0;for(const s of this._$AV)s!==void 0&&(s.strings!==void 0?(s._$AI(e,s,t),t+=s.strings.length-2):s._$AI(e[t])),t++}}class U{get _$AU(){var e;return((e=this._$AM)==null?void 0:e._$AU)??this._$Cv}constructor(e,t,s,i){this.type=2,this._$AH=p,this._$AN=void 0,this._$AA=e,this._$AB=t,this._$AM=s,this.options=i,this._$Cv=(i==null?void 0:i.isConnected)??!0}get parentNode(){let e=this._$AA.parentNode;const t=this._$AM;return t!==void 0&&(e==null?void 0:e.nodeType)===11&&(e=t.parentNode),e}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(e,t=this){e=E(this,e,t),P(e)?e===p||e==null||e===""?(this._$AH!==p&&this._$AR(),this._$AH=p):e!==this._$AH&&e!==C&&this._(e):e._$litType$!==void 0?this.$(e):e.nodeType!==void 0?this.T(e):we(e)?this.k(e):this._(e)}O(e){return this._$AA.parentNode.insertBefore(e,this._$AB)}T(e){this._$AH!==e&&(this._$AR(),this._$AH=this.O(e))}_(e){this._$AH!==p&&P(this._$AH)?this._$AA.nextSibling.data=e:this.T(x.createTextNode(e)),this._$AH=e}$(e){var r;const{values:t,_$litType$:s}=e,i=typeof s=="number"?this._$AC(e):(s.el===void 0&&(s.el=N.createElement(ce(s.h,s.h[0]),this.options)),s);if(((r=this._$AH)==null?void 0:r._$AD)===i)this._$AH.p(t);else{const a=new Ce(i,this),d=a.u(this.options);a.p(t),this.T(d),this._$AH=a}}_$AC(e){let t=le.get(e.strings);return t===void 0&&le.set(e.strings,t=new N(e)),t}k(e){V(this._$AH)||(this._$AH=[],this._$AR());const t=this._$AH;let s,i=0;for(const r of e)i===t.length?t.push(s=new U(this.O(S()),this.O(S()),this,this.options)):s=t[i],s._$AI(r),i++;i<t.length&&(this._$AR(s&&s._$AB.nextSibling,i),t.length=i)}_$AR(e=this._$AA.nextSibling,t){var s;for((s=this._$AP)==null?void 0:s.call(this,!1,!0,t);e!==this._$AB;){const i=e.nextSibling;e.remove(),e=i}}setConnected(e){var t;this._$AM===void 0&&(this._$Cv=e,(t=this._$AP)==null||t.call(this,e))}}class z{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(e,t,s,i,r){this.type=1,this._$AH=p,this._$AN=void 0,this.element=e,this.name=t,this._$AM=i,this.options=r,s.length>2||s[0]!==""||s[1]!==""?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=p}_$AI(e,t=this,s,i){const r=this.strings;let a=!1;if(r===void 0)e=E(this,e,t,0),a=!P(e)||e!==this._$AH&&e!==C,a&&(this._$AH=e);else{const d=e;let n,c;for(e=r[0],n=0;n<r.length-1;n++)c=E(this,d[s+n],t,n),c===C&&(c=this._$AH[n]),a||(a=!P(c)||c!==this._$AH[n]),c===p?e=p:e!==p&&(e+=(c??"")+r[n+1]),this._$AH[n]=c}a&&!i&&this.j(e)}j(e){e===p?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,e??"")}}class Ee extends z{constructor(){super(...arguments),this.type=3}j(e){this.element[this.name]=e===p?void 0:e}}class De extends z{constructor(){super(...arguments),this.type=4}j(e){this.element.toggleAttribute(this.name,!!e&&e!==p)}}class Be extends z{constructor(e,t,s,i,r){super(e,t,s,i,r),this.type=5}_$AI(e,t=this){if((e=E(this,e,t,0)??p)===C)return;const s=this._$AH,i=e===p&&s!==p||e.capture!==s.capture||e.once!==s.once||e.passive!==s.passive,r=e!==p&&(s===p||i);i&&this.element.removeEventListener(this.name,this,s),r&&this.element.addEventListener(this.name,this,e),this._$AH=e}handleEvent(e){var t;typeof this._$AH=="function"?this._$AH.call(((t=this.options)==null?void 0:t.host)??this.element,e):this._$AH.handleEvent(e)}}class Se{constructor(e,t,s){this.element=e,this.type=6,this._$AN=void 0,this._$AM=t,this.options=s}get _$AU(){return this._$AM._$AU}_$AI(e){E(this,e)}}const J=B.litHtmlPolyfillSupport;J==null||J(N,U),(B.litHtmlVersions??(B.litHtmlVersions=[])).push("3.3.1");const Pe=(o,e,t)=>{const s=(t==null?void 0:t.renderBefore)??e;let i=s._$litPart$;if(i===void 0){const r=(t==null?void 0:t.renderBefore)??null;s._$litPart$=i=new U(e.insertBefore(S(),r),r,void 0,t??{})}return i._$AI(o),i};/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */const A=globalThis;class N extends T{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){var e;const t=super.createRenderRoot();return(e=this.renderOptions).renderBefore??(e.renderBefore=t.firstChild),t}update(t){const e=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(t),this._$Do=Pt(e,this.renderRoot,this.renderOptions)}connectedCallback(){var t;super.connectedCallback(),(t=this._$Do)==null||t.setConnected(!0)}disconnectedCallback(){var t;super.disconnectedCallback(),(t=this._$Do)==null||t.setConnected(!1)}render(){return E}}N._$litElement$=!0,N.finalized=!0,(pt=A.litElementHydrateSupport)==null||pt.call(A,{LitElement:N});const K=A.litElementPolyfillSupport;K==null||K({LitElement:N}),(A.litElementVersions??(A.litElementVersions=[])).push("4.2.1");/**
+ */const A=globalThis;class I extends T{constructor(){super(...arguments),this.renderOptions={host:this},this._$Do=void 0}createRenderRoot(){var t;const e=super.createRenderRoot();return(t=this.renderOptions).renderBefore??(t.renderBefore=e.firstChild),e}update(e){const t=this.render();this.hasUpdated||(this.renderOptions.isConnected=this.isConnected),super.update(e),this._$Do=Pe(t,this.renderRoot,this.renderOptions)}connectedCallback(){var e;super.connectedCallback(),(e=this._$Do)==null||e.setConnected(!0)}disconnectedCallback(){var e;super.disconnectedCallback(),(e=this._$Do)==null||e.setConnected(!1)}render(){return C}}I._$litElement$=!0,I.finalized=!0,(pe=A.litElementHydrateSupport)==null||pe.call(A,{LitElement:I});const K=A.litElementPolyfillSupport;K==null||K({LitElement:I}),(A.litElementVersions??(A.litElementVersions=[])).push("4.2.1");/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */const Mt=i=>(t,e)=>{e!==void 0?e.addInitializer(()=>{customElements.define(i,t)}):customElements.define(i,t)};/**
+ */const Me=o=>(e,t)=>{t!==void 0?t.addInitializer(()=>{customElements.define(o,e)}):customElements.define(o,e)};/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */const Ut={attribute:!0,type:String,converter:H,reflect:!1,hasChanged:q},It=(i=Ut,t,e)=>{const{kind:s,metadata:o}=e;let r=globalThis.litPropertyMetadata.get(o);if(r===void 0&&globalThis.litPropertyMetadata.set(o,r=new Map),s==="setter"&&((i=Object.create(i)).wrapped=!0),r.set(e.name,i),s==="accessor"){const{name:n}=e;return{set(d){const a=t.get.call(this);t.set.call(this,d),this.requestUpdate(n,a,i)},init(d){return d!==void 0&&this.C(n,void 0,i,d),d}}}if(s==="setter"){const{name:n}=e;return function(d){const a=this[n];t.call(this,d),this.requestUpdate(n,a,i)}}throw Error("Unsupported decorator location: "+s)};function ht(i){return(t,e)=>typeof e=="object"?It(i,t,e):((s,o,r)=>{const n=o.hasOwnProperty(r);return o.constructor.createProperty(r,s),n?Object.getOwnPropertyDescriptor(o,r):void 0})(i,t,e)}/**
+ */const Ne={attribute:!0,type:String,converter:H,reflect:!1,hasChanged:q},Ue=(o=Ne,e,t)=>{const{kind:s,metadata:i}=t;let r=globalThis.litPropertyMetadata.get(i);if(r===void 0&&globalThis.litPropertyMetadata.set(i,r=new Map),s==="setter"&&((o=Object.create(o)).wrapped=!0),r.set(t.name,o),s==="accessor"){const{name:a}=t;return{set(d){const n=e.get.call(this);e.set.call(this,d),this.requestUpdate(a,n,o)},init(d){return d!==void 0&&this.C(a,void 0,o,d),d}}}if(s==="setter"){const{name:a}=t;return function(d){const n=this[a];e.call(this,d),this.requestUpdate(a,n,o)}}throw Error("Unsupported decorator location: "+s)};function he(o){return(e,t)=>typeof t=="object"?Ue(o,e,t):((s,i,r)=>{const a=i.hasOwnProperty(r);return i.constructor.createProperty(r,s),a?Object.getOwnPropertyDescriptor(i,r):void 0})(o,e,t)}/**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */function b(i){return ht({...i,state:!0,attribute:!1})}class f{constructor(t){this.connection=t}async getBoards(){return(await this.connection.sendMessagePromise({type:"dobeedo/get_boards"})).boards??[]}async getColumns(t){return(await this.connection.sendMessagePromise({type:"dobeedo/get_columns",board_id:t})).columns??[]}async createColumn(t,e,s){return(await this.connection.sendMessagePromise({type:"dobeedo/create_column",board_id:t,name:e,order_index:s})).column}async getTasks(t){return(await this.connection.sendMessagePromise({type:"dobeedo/get_tasks",board_id:t})).tasks??[]}async createTask(t,e,s,o){return(await this.connection.sendMessagePromise({type:"dobeedo/create_task",board_id:t,column_id:e,title:s,description:o})).task}async updateTask(t,e){const s={type:"dobeedo/update_task",task_id:t};return e.title!==void 0&&(s.title=e.title),e.description!==void 0&&(s.description=e.description),(await this.connection.sendMessagePromise(s)).task}async moveTask(t,e,s){const o={type:"dobeedo/move_task",task_id:t,target_column_id:e};return s!==void 0&&(o.target_sort_index=s),(await this.connection.sendMessagePromise(o)).task}async deleteTask(t){await this.connection.sendMessagePromise({type:"dobeedo/delete_task",task_id:t})}async deleteColumn(t){await this.connection.sendMessagePromise({type:"dobeedo/delete_column",column_id:t})}async deleteBoard(t){await this.connection.sendMessagePromise({type:"dobeedo/delete_board",board_id:t})}subscribeUpdates(t){const e=this.connection;if(e.subscribeEvents){console.debug("DoBeeDo: using connection.subscribeEvents for updates");const r=e.subscribeEvents(n=>{if(console.debug("DoBeeDo: raw WS message via subscribeEvents",n),typeof(n==null?void 0:n.event_type)=="string"&&n.data){const d=n.event_type;if(d.startsWith("dobeedo_")){const a=d.replace(/^dobeedo_/,"");t({event_type:a,payload:n.data,raw_type:d})}return}(n==null?void 0:n.type)==="dobeedo/event"&&n.event_type&&n.payload&&t({event_type:n.event_type,payload:n.payload,raw_type:n.raw_type})});return()=>{console.debug("DoBeeDo: unsubscribe from subscribeEvents"),r()}}if(!e.subscribeMessage)return console.warn("DoBeeDo: connection.subscribeMessage/subscribeEvents not available"),()=>{};const s=r=>{console.debug("DoBeeDo: raw WS message in subscribeUpdates handler",r),(r==null?void 0:r.type)==="dobeedo/event"&&r.event_type&&r.payload&&t({event_type:r.event_type,payload:r.payload,raw_type:r.raw_type})};console.debug("DoBeeDo: calling connection.subscribeMessage for subscribe_updates");const o=e.subscribeMessage(s,{type:"dobeedo/subscribe_updates"});return()=>{console.debug("DoBeeDo: unsubscribe from subscribe_updates"),o()}}async populateTestData(){await this.connection.sendMessagePromise({type:"dobeedo/populate_test_data"})}}var Nt=Object.defineProperty,Ot=Object.getOwnPropertyDescriptor,m=(i,t,e,s)=>{for(var o=s>1?void 0:s?Ot(t,e):t,r=i.length-1,n;r>=0;r--)(n=i[r])&&(o=(s?n(t,e,o):n(o))||o);return s&&o&&Nt(t,e,o),o};let u=class extends N{constructor(){super(...arguments),this._boards=[],this._tasks=[],this._columns=[],this._loading=!1,this._newTaskTitle="",this._newTaskDescription="",this._newColumnName="",this._unsubscribeUpdates=null,this._selectedBoardId=null,this._editingTaskId=null,this._editTaskTitle="",this._editTaskDescription="",this._movingTaskId=null}static get styles(){return _t`
+ */function b(o){return he({...o,state:!0,attribute:!1})}class f{constructor(e){this.connection=e}async getBoards(){return(await this.connection.sendMessagePromise({type:"dobeedo/get_boards"})).boards??[]}async createBoard(e,t){const s={type:"dobeedo/create_board",name:e};return t!==void 0&&(s.description=t),(await this.connection.sendMessagePromise(s)).board}async getColumns(e){return(await this.connection.sendMessagePromise({type:"dobeedo/get_columns",board_id:e})).columns??[]}async createColumn(e,t,s){return(await this.connection.sendMessagePromise({type:"dobeedo/create_column",board_id:e,name:t,order_index:s})).column}async getTasks(e){return(await this.connection.sendMessagePromise({type:"dobeedo/get_tasks",board_id:e})).tasks??[]}async createTask(e,t,s,i){return(await this.connection.sendMessagePromise({type:"dobeedo/create_task",board_id:e,column_id:t,title:s,description:i})).task}async updateTask(e,t){const s={type:"dobeedo/update_task",task_id:e};return t.title!==void 0&&(s.title=t.title),t.description!==void 0&&(s.description=t.description),(await this.connection.sendMessagePromise(s)).task}async moveTask(e,t,s){const i={type:"dobeedo/move_task",task_id:e,target_column_id:t};return s!==void 0&&(i.target_sort_index=s),(await this.connection.sendMessagePromise(i)).task}async deleteTask(e){await this.connection.sendMessagePromise({type:"dobeedo/delete_task",task_id:e})}async deleteColumn(e){await this.connection.sendMessagePromise({type:"dobeedo/delete_column",column_id:e})}async deleteBoard(e){await this.connection.sendMessagePromise({type:"dobeedo/delete_board",board_id:e})}subscribeUpdates(e){const t=this.connection;if(t.subscribeEvents){console.debug("DoBeeDo: using connection.subscribeEvents for updates");const r=t.subscribeEvents(a=>{if(console.debug("DoBeeDo: raw WS message via subscribeEvents",a),typeof(a==null?void 0:a.event_type)=="string"&&a.data){const d=a.event_type;if(d.startsWith("dobeedo_")){const n=d.replace(/^dobeedo_/,"");e({event_type:n,payload:a.data,raw_type:d})}return}(a==null?void 0:a.type)==="dobeedo/event"&&a.event_type&&a.payload&&e({event_type:a.event_type,payload:a.payload,raw_type:a.raw_type})});return()=>{console.debug("DoBeeDo: unsubscribe from subscribeEvents"),r()}}if(!t.subscribeMessage)return console.warn("DoBeeDo: connection.subscribeMessage/subscribeEvents not available"),()=>{};const s=r=>{console.debug("DoBeeDo: raw WS message in subscribeUpdates handler",r),(r==null?void 0:r.type)==="dobeedo/event"&&r.event_type&&r.payload&&e({event_type:r.event_type,payload:r.payload,raw_type:r.raw_type})};console.debug("DoBeeDo: calling connection.subscribeMessage for subscribe_updates");const i=t.subscribeMessage(s,{type:"dobeedo/subscribe_updates"});return()=>{console.debug("DoBeeDo: unsubscribe from subscribe_updates"),i()}}async populateTestData(){await this.connection.sendMessagePromise({type:"dobeedo/populate_test_data"})}}var Ie=Object.defineProperty,Oe=Object.getOwnPropertyDescriptor,_=(o,e,t,s)=>{for(var i=s>1?void 0:s?Oe(e,t):e,r=o.length-1,a;r>=0;r--)(a=o[r])&&(i=(s?a(e,t,i):a(i))||i);return s&&i&&Ie(e,t,i),i};let u=class extends I{constructor(){super(...arguments),this._boards=[],this._tasks=[],this._columns=[],this._loading=!1,this._newTaskTitle="",this._newTaskDescription="",this._newColumnName="",this._newBoardName="",this._unsubscribeUpdates=null,this._selectedBoardId=null,this._editingTaskId=null,this._editTaskTitle="",this._editTaskDescription="",this._movingTaskId=null}static get styles(){return _e`
       :host {
         display: block;
         box-sizing: border-box;
@@ -117,6 +117,14 @@
         gap: 8px;
         margin-bottom: 24px;
         flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .board-chip-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        position: relative;
       }
 
       .board-chip {
@@ -140,6 +148,61 @@
         color: var(--text-primary-color);
         border-color: var(--primary-color);
         box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
+      }
+
+      .board-delete-btn {
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--warning-color);
+        color: var(--text-primary-color);
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+      }
+
+      .board-delete-btn:hover {
+        opacity: 1;
+      }
+
+      .add-board-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .add-board-input {
+        padding: 8px 16px;
+        border-radius: 16px;
+        background: var(--card-background-color, #1c1c1c);
+        border: 1px dashed var(--ha-color-border-neutral-normal, #7a7a7a);
+        color: var(--primary-text-color);
+        font-size: 14px;
+        width: 150px;
+        transition: all 0.2s ease;
+      }
+
+      .add-board-input:focus {
+        border-style: solid;
+        border-color: var(--primary-color);
+        outline: none;
+      }
+
+      .add-board-input::placeholder {
+        color: var(--secondary-text-color);
+        opacity: 0.7;
+      }
+
+      .add-board-actions {
+        display: flex;
+        gap: 4px;
       }
 
       /* Columns layout */
@@ -357,11 +420,11 @@
         gap: 8px;
         align-items: center;
       }
-    `}updated(i){if(i.has("hass")&&this.hass&&(this._fetchBoards(),!this._unsubscribeUpdates)){const t=new f(this.hass.connection);console.debug("DoBeeDo: registering subscribeUpdates"),this._unsubscribeUpdates=t.subscribeUpdates(e=>{var s,o;if(console.debug("DoBeeDo event received in panel",e),e.event_type.startsWith("task_")){const r=(s=e.payload.task)==null?void 0:s.board_id;console.debug("DoBeeDo task event for board",r,"selected",this._selectedBoardId),r&&r===this._selectedBoardId&&this._refreshTasksForSelectedBoard()}else if(e.event_type.startsWith("column_")){const r=(o=e.payload.column)==null?void 0:o.board_id;console.debug("DoBeeDo column event for board",r,"selected",this._selectedBoardId),r&&r===this._selectedBoardId&&this._refreshColumnsAndTasks()}else e.event_type.startsWith("board_")&&(console.debug("DoBeeDo board event"),this._fetchBoards())})}}async _fetchBoards(){if(this.hass){this._loading=!0;try{const i=new f(this.hass.connection);this._boards=await i.getBoards(),!this._selectedBoardId&&this._boards.length>0&&(this._selectedBoardId=this._boards[0].id),await this._refreshColumnsAndTasks()}catch(i){console.error("Failed to load DoBeeDo data",i)}finally{this._loading=!1}}}async _refreshColumnsAndTasks(){if(!this.hass||!this._selectedBoardId){this._columns=[],this._tasks=[];return}const i=new f(this.hass.connection);this._columns=await i.getColumns(this._selectedBoardId),this._tasks=await i.getTasks(this._selectedBoardId)}async _refreshTasksForSelectedBoard(){if(!this.hass||!this._selectedBoardId){this._tasks=[];return}const i=new f(this.hass.connection);this._tasks=await i.getTasks(this._selectedBoardId)}_handleSelectBoard(i){this._selectedBoardId!==i.id&&(this._selectedBoardId=i.id,this._refreshColumnsAndTasks())}async _handleCreateTask(i){if(!this.hass||!this._selectedBoardId||!this._newTaskTitle.trim())return;const t=new f(this.hass.connection),e=this._boards.find(s=>s.id===this._selectedBoardId);if(e)try{const s=await t.createTask(e.id,i,this._newTaskTitle.trim(),this._newTaskDescription.trim()||void 0);this._newTaskTitle="",this._newTaskDescription="",e.id===this._selectedBoardId?this._tasks=[...this._tasks,s]:await this._refreshTasksForSelectedBoard()}catch(s){console.error("Failed to create DoBeeDo task",s)}}async _handleCreateColumn(){if(!this.hass||!this._selectedBoardId||!this._newColumnName.trim())return;const i=new f(this.hass.connection);try{const t=await i.createColumn(this._selectedBoardId,this._newColumnName.trim());this._newColumnName="",this._columns=[...this._columns,t]}catch(t){console.error("Failed to create DoBeeDo column",t)}}_startEditTask(i){this._editingTaskId=i.id,this._editTaskTitle=i.title,this._editTaskDescription=i.description??""}_cancelEditTask(){this._editingTaskId=null,this._editTaskTitle="",this._editTaskDescription=""}async _saveEditTask(){if(!this.hass||!this._editingTaskId)return;const i=this._tasks.find(r=>r.id===this._editingTaskId);if(!i)return;const t=this._editTaskTitle.trim();if(!t)return;const e={};t!==i.title&&(e.title=t);const s=this._editTaskDescription.trim();if(s!==(i.description??"")&&(e.description=s===""?null:s),!e.title&&e.description===void 0){this._cancelEditTask();return}const o=new f(this.hass.connection);try{const r=await o.updateTask(this._editingTaskId,e);this._tasks=this._tasks.map(n=>n.id===r.id?r:n),this._cancelEditTask()}catch(r){console.error("Failed to update DoBeeDo task",r)}}_startMoveTask(i){this._movingTaskId=i.id}_cancelMoveTask(){this._movingTaskId=null}async _handleMoveTask(i,t){if(!this.hass||t===i.column_id){this._cancelMoveTask();return}const e=new f(this.hass.connection);try{const s=await e.moveTask(i.id,t);this._tasks=this._tasks.map(o=>o.id===s.id?s:o),this._cancelMoveTask()}catch(s){console.error("Failed to move DoBeeDo task",s)}}async _handleDeleteTask(i){if(!this.hass||!window.confirm(`Delete task "${i.title}"?`))return;const t=new f(this.hass.connection);try{await t.deleteTask(i.id),this._tasks=this._tasks.filter(e=>e.id!==i.id)}catch(e){console.error("Failed to delete DoBeeDo task",e)}}async _handleDeleteColumn(i){if(!this.hass)return;const e=this._tasks.filter(r=>r.column_id===i.id).length,s=e>0?`Delete column "${i.name}" and ${e} task${e===1?"":"s"}?`:`Delete column "${i.name}"?`;if(!window.confirm(s))return;const o=new f(this.hass.connection);try{await o.deleteColumn(i.id),this._columns=this._columns.filter(r=>r.id!==i.id),this._tasks=this._tasks.filter(r=>r.column_id!==i.id)}catch(r){console.error("Failed to delete DoBeeDo column",r)}}async _handlePopulateTestData(){if(!this.hass||!window.confirm(`⚠️ WARNING: This will DELETE ALL existing boards, columns, and tasks!
+    `}updated(o){if(o.has("hass")&&this.hass&&(this._fetchBoards(),!this._unsubscribeUpdates)){const e=new f(this.hass.connection);console.debug("DoBeeDo: registering subscribeUpdates"),this._unsubscribeUpdates=e.subscribeUpdates(t=>{var s,i;if(console.debug("DoBeeDo event received in panel",t),t.event_type.startsWith("task_")){const r=(s=t.payload.task)==null?void 0:s.board_id;console.debug("DoBeeDo task event for board",r,"selected",this._selectedBoardId),r&&r===this._selectedBoardId&&this._refreshTasksForSelectedBoard()}else if(t.event_type.startsWith("column_")){const r=(i=t.payload.column)==null?void 0:i.board_id;console.debug("DoBeeDo column event for board",r,"selected",this._selectedBoardId),r&&r===this._selectedBoardId&&this._refreshColumnsAndTasks()}else t.event_type.startsWith("board_")&&(console.debug("DoBeeDo board event"),this._fetchBoards())})}}async _fetchBoards(){if(this.hass){this._loading=!0;try{const o=new f(this.hass.connection);this._boards=await o.getBoards(),!this._selectedBoardId&&this._boards.length>0&&(this._selectedBoardId=this._boards[0].id),await this._refreshColumnsAndTasks()}catch(o){console.error("Failed to load DoBeeDo data",o)}finally{this._loading=!1}}}async _refreshColumnsAndTasks(){if(!this.hass||!this._selectedBoardId){this._columns=[],this._tasks=[];return}const o=new f(this.hass.connection);this._columns=await o.getColumns(this._selectedBoardId),this._tasks=await o.getTasks(this._selectedBoardId)}async _refreshTasksForSelectedBoard(){if(!this.hass||!this._selectedBoardId){this._tasks=[];return}const o=new f(this.hass.connection);this._tasks=await o.getTasks(this._selectedBoardId)}_handleSelectBoard(o){this._selectedBoardId!==o.id&&(this._selectedBoardId=o.id,this._refreshColumnsAndTasks())}async _handleCreateTask(o){if(!this.hass||!this._selectedBoardId||!this._newTaskTitle.trim())return;const e=new f(this.hass.connection),t=this._boards.find(s=>s.id===this._selectedBoardId);if(t)try{const s=await e.createTask(t.id,o,this._newTaskTitle.trim(),this._newTaskDescription.trim()||void 0);this._newTaskTitle="",this._newTaskDescription="",t.id===this._selectedBoardId?this._tasks=[...this._tasks,s]:await this._refreshTasksForSelectedBoard()}catch(s){console.error("Failed to create DoBeeDo task",s)}}async _handleCreateColumn(){if(!this.hass||!this._selectedBoardId||!this._newColumnName.trim())return;const o=new f(this.hass.connection);try{const e=await o.createColumn(this._selectedBoardId,this._newColumnName.trim());this._newColumnName="",this._columns=[...this._columns,e]}catch(e){console.error("Failed to create DoBeeDo column",e)}}async _handleCreateBoard(){if(!this.hass||!this._newBoardName.trim())return;const o=new f(this.hass.connection);try{const e=await o.createBoard(this._newBoardName.trim());this._newBoardName="",this._boards=[...this._boards,e],this._selectedBoardId=e.id,await this._refreshColumnsAndTasks()}catch(e){console.error("Failed to create DoBeeDo board",e)}}async _handleDeleteBoard(o){if(!this.hass||!window.confirm(`Delete board "${o.name}" and all its columns and tasks?`))return;const e=new f(this.hass.connection);try{await e.deleteBoard(o.id),this._boards=this._boards.filter(t=>t.id!==o.id),this._selectedBoardId===o.id&&(this._selectedBoardId=this._boards.length>0?this._boards[0].id:null,await this._refreshColumnsAndTasks())}catch(t){console.error("Failed to delete DoBeeDo board",t)}}_startEditTask(o){this._editingTaskId=o.id,this._editTaskTitle=o.title,this._editTaskDescription=o.description??""}_cancelEditTask(){this._editingTaskId=null,this._editTaskTitle="",this._editTaskDescription=""}async _saveEditTask(){if(!this.hass||!this._editingTaskId)return;const o=this._tasks.find(r=>r.id===this._editingTaskId);if(!o)return;const e=this._editTaskTitle.trim();if(!e)return;const t={};e!==o.title&&(t.title=e);const s=this._editTaskDescription.trim();if(s!==(o.description??"")&&(t.description=s===""?null:s),!t.title&&t.description===void 0){this._cancelEditTask();return}const i=new f(this.hass.connection);try{const r=await i.updateTask(this._editingTaskId,t);this._tasks=this._tasks.map(a=>a.id===r.id?r:a),this._cancelEditTask()}catch(r){console.error("Failed to update DoBeeDo task",r)}}_startMoveTask(o){this._movingTaskId=o.id}_cancelMoveTask(){this._movingTaskId=null}async _handleMoveTask(o,e){if(!this.hass||e===o.column_id){this._cancelMoveTask();return}const t=new f(this.hass.connection);try{const s=await t.moveTask(o.id,e);this._tasks=this._tasks.map(i=>i.id===s.id?s:i),this._cancelMoveTask()}catch(s){console.error("Failed to move DoBeeDo task",s)}}async _handleDeleteTask(o){if(!this.hass||!window.confirm(`Delete task "${o.title}"?`))return;const e=new f(this.hass.connection);try{await e.deleteTask(o.id),this._tasks=this._tasks.filter(t=>t.id!==o.id)}catch(t){console.error("Failed to delete DoBeeDo task",t)}}async _handleDeleteColumn(o){if(!this.hass)return;const t=this._tasks.filter(r=>r.column_id===o.id).length,s=t>0?`Delete column "${o.name}" and ${t} task${t===1?"":"s"}?`:`Delete column "${o.name}"?`;if(!window.confirm(s))return;const i=new f(this.hass.connection);try{await i.deleteColumn(o.id),this._columns=this._columns.filter(r=>r.id!==o.id),this._tasks=this._tasks.filter(r=>r.column_id!==o.id)}catch(r){console.error("Failed to delete DoBeeDo column",r)}}async _handlePopulateTestData(){if(!this.hass||!window.confirm(`⚠️ WARNING: This will DELETE ALL existing boards, columns, and tasks!
 
 This is a development helper that clears everything and creates fresh test data.
 
-Are you sure you want to continue?`))return;const i=new f(this.hass.connection);try{await i.populateTestData(),await this._fetchBoards()}catch(t){console.error("Failed to populate test data",t)}}disconnectedCallback(){super.disconnectedCallback(),this._unsubscribeUpdates&&(this._unsubscribeUpdates(),this._unsubscribeUpdates=null)}render(){return h`
+Are you sure you want to continue?`))return;const o=new f(this.hass.connection);try{await o.populateTestData(),await this._fetchBoards()}catch(e){console.error("Failed to populate test data",e)}}disconnectedCallback(){super.disconnectedCallback(),this._unsubscribeUpdates&&(this._unsubscribeUpdates(),this._unsubscribeUpdates=null)}render(){return h`
       <h1>DoBeeDo</h1>
 
       <div class="flex-row mb-16">
@@ -384,19 +447,49 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
       ${this._selectedBoardId?this._renderBoard():h`<p>Select a board to begin</p>`}
     `}_renderBoardSelector(){return h`
       <div class="board-selector">
-        ${this._boards.map(i=>h`
-            <div
-              class="board-chip ${i.id===this._selectedBoardId?"selected":""}"
-              @click=${()=>this._handleSelectBoard(i)}
-            >
-              ${i.name}
+        ${this._boards.map(o=>h`
+            <div class="board-chip-container">
+              <div
+                class="board-chip ${o.id===this._selectedBoardId?"selected":""}"
+                @click=${()=>this._handleSelectBoard(o)}
+              >
+                ${o.name}
+              </div>
+              <button
+                class="board-delete-btn"
+                @click=${()=>this._handleDeleteBoard(o)}
+                title="Delete board"
+              >
+                ×
+              </button>
             </div>
           `)}
+        <div class="board-chip-container add-board-container">
+          <input
+            type="text"
+            class="add-board-input"
+            .value=${this._newBoardName}
+            placeholder="+ Add board"
+            @input=${o=>{const e=o.target;this._newBoardName=e.value}}
+            @keydown=${o=>{o.key==="Enter"&&this._newBoardName.trim()&&this._handleCreateBoard()}}
+          />
+          ${this._newBoardName.trim()?h`
+                <div class="add-board-actions">
+                  <button class="primary small" @click=${()=>this._handleCreateBoard()}>Add</button>
+                  <button
+                    class="secondary small"
+                    @click=${()=>{this._newBoardName=""}}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              `:""}
+        </div>
       </div>
     `}_renderBoard(){return h`
       ${this._columns.length===0?h`<div class="empty-state">No columns yet. Add a column to get started!</div>`:""}
       <div class="columns-container">
-        ${this._columns.map(i=>this._renderColumn(i))}
+        ${this._columns.map(o=>this._renderColumn(o))}
         ${this._renderAddColumnMock()}
       </div>
     `}_renderAddColumnMock(){return h`
@@ -407,8 +500,8 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
             class="add-column-input"
             .value=${this._newColumnName}
             placeholder="Add column..."
-            @input=${i=>{const t=i.target;this._newColumnName=t.value}}
-            @keydown=${i=>{i.key==="Enter"&&this._newColumnName.trim()&&this._handleCreateColumn()}}
+            @input=${o=>{const e=o.target;this._newColumnName=e.value}}
+            @keydown=${o=>{o.key==="Enter"&&this._newColumnName.trim()&&this._handleCreateColumn()}}
           />
           ${this._newColumnName.trim()?h`
                 <div class="add-column-buttons">
@@ -425,25 +518,25 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
               `:""}
         </div>
       </div>
-    `}_renderColumn(i){const t=this._tasks.filter(e=>e.column_id===i.id).sort((e,s)=>e.sort_index-s.sort_index);return h`
+    `}_renderColumn(o){const e=this._tasks.filter(t=>t.column_id===o.id).sort((t,s)=>t.sort_index-s.sort_index);return h`
       <div class="column">
         <div class="column-header">
           <div class="column-header-left">
-            <span>${i.name}</span>
-            <span class="task-count">${t.length}</span>
+            <span>${o.name}</span>
+            <span class="task-count">${e.length}</span>
           </div>
           <button
             class="warning small"
-            @click=${()=>this._handleDeleteColumn(i)}
+            @click=${()=>this._handleDeleteColumn(o)}
             title="Delete column"
           >
             ×
           </button>
         </div>
         <div class="tasks-list">
-          ${t.length===0?h`<div class="empty-state" style="padding: 16px; font-size: 13px;">
+          ${e.length===0?h`<div class="empty-state" style="padding: 16px; font-size: 13px;">
                 No tasks yet
-              </div>`:t.map(e=>this._renderTask(e))}
+              </div>`:e.map(t=>this._renderTask(t))}
         </div>
         <div class="add-task-form">
           <input
@@ -451,8 +544,8 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
             class="add-task-input"
             .value=${this._newTaskTitle}
             placeholder="Add a task..."
-            @input=${e=>{const s=e.target;this._newTaskTitle=s.value}}
-            @keydown=${e=>{e.key==="Enter"&&this._newTaskTitle.trim()&&this._handleCreateTask(i.id)}}
+            @input=${t=>{const s=t.target;this._newTaskTitle=s.value}}
+            @keydown=${t=>{t.key==="Enter"&&this._newTaskTitle.trim()&&this._handleCreateTask(o.id)}}
           />
           ${this._newTaskTitle.trim()?h`
                 <div class="add-task-actions">
@@ -461,11 +554,11 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
                     class="add-task-input"
                     .value=${this._newTaskDescription}
                     placeholder="Description (optional)"
-                    @input=${e=>{const s=e.target;this._newTaskDescription=s.value}}
-                    @keydown=${e=>{e.key==="Enter"&&this._handleCreateTask(i.id)}}
+                    @input=${t=>{const s=t.target;this._newTaskDescription=s.value}}
+                    @keydown=${t=>{t.key==="Enter"&&this._handleCreateTask(o.id)}}
                   />
                   <div class="add-task-buttons">
-                    <button class="primary small" @click=${()=>this._handleCreateTask(i.id)}>
+                    <button class="primary small" @click=${()=>this._handleCreateTask(o.id)}>
                       Add
                     </button>
                     <button
@@ -479,21 +572,21 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
               `:""}
         </div>
       </div>
-    `}_renderTask(i){const t=this._editingTaskId===i.id,e=this._movingTaskId===i.id;return t?h`
+    `}_renderTask(o){const e=this._editingTaskId===o.id,t=this._movingTaskId===o.id;return e?h`
         <div class="task-card" style="padding: 16px;">
           <div style="margin-bottom: 8px;">
             <input
               type="text"
               .value=${this._editTaskTitle}
               placeholder="Task title"
-              @input=${s=>{const o=s.target;this._editTaskTitle=o.value}}
+              @input=${s=>{const i=s.target;this._editTaskTitle=i.value}}
               style="width: 100%; margin-bottom: 8px;"
             />
             <input
               type="text"
               .value=${this._editTaskDescription}
               placeholder="Description (optional)"
-              @input=${s=>{const o=s.target;this._editTaskDescription=o.value}}
+              @input=${s=>{const i=s.target;this._editTaskDescription=i.value}}
               style="width: 100%;"
             />
           </div>
@@ -502,20 +595,20 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
             <button class="secondary small" @click=${()=>this._cancelEditTask()}>Cancel</button>
           </div>
         </div>
-      `:e?h`
+      `:t?h`
         <div class="task-card" style="padding: 16px;">
-          <div class="task-title" style="margin-bottom: 8px;">${i.title}</div>
+          <div class="task-title" style="margin-bottom: 8px;">${o.title}</div>
           <div style="font-size: 12px; margin-bottom: 8px; color: var(--secondary-text-color);">
             Move to column:
           </div>
           <select
             style="width: 100%; margin-bottom: 8px;"
-            @change=${s=>{const o=s.target;this._handleMoveTask(i,o.value)}}
+            @change=${s=>{const i=s.target;this._handleMoveTask(o,i.value)}}
           >
             <option value="">-- Select column --</option>
             ${this._columns.map(s=>h`
-                <option value=${s.id} ?selected=${s.id===i.column_id}>
-                  ${s.name} ${s.id===i.column_id?"(current)":""}
+                <option value=${s.id} ?selected=${s.id===o.column_id}>
+                  ${s.name} ${s.id===o.column_id?"(current)":""}
                 </option>
               `)}
           </select>
@@ -523,12 +616,12 @@ Are you sure you want to continue?`))return;const i=new f(this.hass.connection);
         </div>
       `:h`
       <div class="task-card">
-        <div class="task-title">${i.title}</div>
-        ${i.description?h`<div class="task-description">${i.description}</div>`:""}
+        <div class="task-title">${o.title}</div>
+        ${o.description?h`<div class="task-description">${o.description}</div>`:""}
         <div class="task-actions">
-          <button class="secondary small" @click=${()=>this._startEditTask(i)}>Edit</button>
-          <button class="secondary small" @click=${()=>this._startMoveTask(i)}>Move</button>
-          <button class="warning small" @click=${()=>this._handleDeleteTask(i)}>Delete</button>
+          <button class="secondary small" @click=${()=>this._startEditTask(o)}>Edit</button>
+          <button class="secondary small" @click=${()=>this._startMoveTask(o)}>Move</button>
+          <button class="warning small" @click=${()=>this._handleDeleteTask(o)}>Delete</button>
         </div>
       </div>
-    `}};m([ht({attribute:!1})],u.prototype,"hass",2),m([b()],u.prototype,"_boards",2),m([b()],u.prototype,"_tasks",2),m([b()],u.prototype,"_columns",2),m([b()],u.prototype,"_loading",2),m([b()],u.prototype,"_newTaskTitle",2),m([b()],u.prototype,"_newTaskDescription",2),m([b()],u.prototype,"_newColumnName",2),m([b()],u.prototype,"_unsubscribeUpdates",2),m([b()],u.prototype,"_selectedBoardId",2),m([b()],u.prototype,"_editingTaskId",2),m([b()],u.prototype,"_editTaskTitle",2),m([b()],u.prototype,"_editTaskDescription",2),m([b()],u.prototype,"_movingTaskId",2),u=m([Mt("dobeedo-panel")],u)})();
+    `}};_([he({attribute:!1})],u.prototype,"hass",2),_([b()],u.prototype,"_boards",2),_([b()],u.prototype,"_tasks",2),_([b()],u.prototype,"_columns",2),_([b()],u.prototype,"_loading",2),_([b()],u.prototype,"_newTaskTitle",2),_([b()],u.prototype,"_newTaskDescription",2),_([b()],u.prototype,"_newColumnName",2),_([b()],u.prototype,"_newBoardName",2),_([b()],u.prototype,"_unsubscribeUpdates",2),_([b()],u.prototype,"_selectedBoardId",2),_([b()],u.prototype,"_editingTaskId",2),_([b()],u.prototype,"_editTaskTitle",2),_([b()],u.prototype,"_editTaskDescription",2),_([b()],u.prototype,"_movingTaskId",2),u=_([Me("dobeedo-panel")],u)})();

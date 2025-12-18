@@ -36,6 +36,9 @@ export class DoBeeDoPanel extends LitElement {
   private _newColumnName = "";
 
   @state()
+  private _newBoardName = "";
+
+  @state()
   private _unsubscribeUpdates: (() => void) | null = null;
 
   @state()
@@ -143,6 +146,14 @@ export class DoBeeDoPanel extends LitElement {
         gap: 8px;
         margin-bottom: 24px;
         flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .board-chip-container {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        position: relative;
       }
 
       .board-chip {
@@ -166,6 +177,61 @@ export class DoBeeDoPanel extends LitElement {
         color: var(--text-primary-color);
         border-color: var(--primary-color);
         box-shadow: var(--material-shadow-elevation-2dp, 0 2px 2px 0 rgba(0,0,0,0.14));
+      }
+
+      .board-delete-btn {
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--warning-color);
+        color: var(--text-primary-color);
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+      }
+
+      .board-delete-btn:hover {
+        opacity: 1;
+      }
+
+      .add-board-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .add-board-input {
+        padding: 8px 16px;
+        border-radius: 16px;
+        background: var(--card-background-color, #1c1c1c);
+        border: 1px dashed var(--ha-color-border-neutral-normal, #7a7a7a);
+        color: var(--primary-text-color);
+        font-size: 14px;
+        width: 150px;
+        transition: all 0.2s ease;
+      }
+
+      .add-board-input:focus {
+        border-style: solid;
+        border-color: var(--primary-color);
+        outline: none;
+      }
+
+      .add-board-input::placeholder {
+        color: var(--secondary-text-color);
+        opacity: 0.7;
+      }
+
+      .add-board-actions {
+        display: flex;
+        gap: 4px;
       }
 
       /* Columns layout */
@@ -523,6 +589,49 @@ export class DoBeeDoPanel extends LitElement {
     }
   }
 
+  private async _handleCreateBoard(): Promise<void> {
+    if (!this.hass || !this._newBoardName.trim()) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      const newBoard = await api.createBoard(this._newBoardName.trim());
+      this._newBoardName = "";
+      this._boards = [...this._boards, newBoard];
+      this._selectedBoardId = newBoard.id;
+      await this._refreshColumnsAndTasks();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create DoBeeDo board", err);
+    }
+  }
+
+  private async _handleDeleteBoard(board: DoBeeDoBoardSummary): Promise<void> {
+    if (!this.hass) {
+      return;
+    }
+
+    if (!window.confirm(`Delete board "${board.name}" and all its columns and tasks?`)) {
+      return;
+    }
+
+    const api = new DoBeeDoApiClient(this.hass.connection);
+    try {
+      await api.deleteBoard(board.id);
+      this._boards = this._boards.filter((b) => b.id !== board.id);
+
+      // Select first remaining board or clear selection
+      if (this._selectedBoardId === board.id) {
+        this._selectedBoardId = this._boards.length > 0 ? this._boards[0].id : null;
+        await this._refreshColumnsAndTasks();
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to delete DoBeeDo board", err);
+    }
+  }
+
   private _startEditTask(task: DoBeeDoTaskSummary): void {
     this._editingTaskId = task.id;
     this._editTaskTitle = task.title;
@@ -723,14 +832,55 @@ export class DoBeeDoPanel extends LitElement {
       <div class="board-selector">
         ${this._boards.map(
           (board) => html`
-            <div
-              class="board-chip ${board.id === this._selectedBoardId ? "selected" : ""}"
-              @click=${() => this._handleSelectBoard(board)}
-            >
-              ${board.name}
+            <div class="board-chip-container">
+              <div
+                class="board-chip ${board.id === this._selectedBoardId ? "selected" : ""}"
+                @click=${() => this._handleSelectBoard(board)}
+              >
+                ${board.name}
+              </div>
+              <button
+                class="board-delete-btn"
+                @click=${() => this._handleDeleteBoard(board)}
+                title="Delete board"
+              >
+                ×
+              </button>
             </div>
           `,
         )}
+        <div class="board-chip-container add-board-container">
+          <input
+            type="text"
+            class="add-board-input"
+            .value=${this._newBoardName}
+            placeholder="+ Add board"
+            @input=${(ev: Event) => {
+              const target = ev.target as HTMLInputElement;
+              this._newBoardName = target.value;
+            }}
+            @keydown=${(ev: KeyboardEvent) => {
+              if (ev.key === "Enter" && this._newBoardName.trim()) {
+                void this._handleCreateBoard();
+              }
+            }}
+          />
+          ${this._newBoardName.trim()
+            ? html`
+                <div class="add-board-actions">
+                  <button class="primary small" @click=${() => this._handleCreateBoard()}>Add</button>
+                  <button
+                    class="secondary small"
+                    @click=${() => {
+                      this._newBoardName = "";
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              `
+            : ""}
+        </div>
       </div>
     `;
   }

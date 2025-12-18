@@ -58,6 +58,23 @@ export class DoBeeDoApiClient {
     return response.boards ?? [];
   }
 
+  public async createBoard(name: string, description?: string): Promise<DoBeeDoBoardSummary> {
+    const payload: Record<string, any> = {
+      type: "dobeedo/create_board",
+      name,
+    };
+
+    if (description !== undefined) {
+      payload.description = description;
+    }
+
+    const response = await this.connection.sendMessagePromise<{
+      board: DoBeeDoBoardSummary;
+    }>(payload);
+
+    return response.board;
+  }
+
   public async getColumns(boardId: string): Promise<DoBeeDoColumnSummary[]> {
     const response = await this.connection.sendMessagePromise<{
       columns?: DoBeeDoColumnSummary[];

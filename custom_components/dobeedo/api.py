@@ -68,6 +68,40 @@ async def websocket_get_boards(
 
 
 @websocket_api.websocket_command(
+    {
+        "type": f"{DOMAIN}/create_board",
+        "name": str,
+        Optional("description"): VAny(str, None),
+    }
+)
+@websocket_api.async_response
+async def websocket_create_board(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create a new board.
+
+    Required fields: ``name``.
+    Optional fields: ``description``.
+    """
+
+    manager = _get_manager(hass)
+    if manager is None:
+        connection.send_error(msg["id"], "not_initialized", "DoBeeDo manager not available")
+        return
+
+    try:
+        board = await manager.async_create_board(
+            msg["name"],
+            description=msg.get("description"),
+        )
+    except Exception as err:
+        connection.send_error(msg["id"], "create_failed", str(err))
+        return
+
+    connection.send_result(msg["id"], {"board": board.to_dict()})
+
+
+@websocket_api.websocket_command(
     {"type": f"{DOMAIN}/get_tasks", "board_id": str},
 )
 @websocket_api.async_response
@@ -444,6 +478,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register DoBeeDo WebSocket commands with Home Assistant."""
 
     websocket_api.async_register_command(hass, websocket_get_boards)
+    websocket_api.async_register_command(hass, websocket_create_board)
     websocket_api.async_register_command(hass, websocket_get_tasks)
     websocket_api.async_register_command(hass, websocket_get_columns)
     websocket_api.async_register_command(hass, websocket_create_column)
