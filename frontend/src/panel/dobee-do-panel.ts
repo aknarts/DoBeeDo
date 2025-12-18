@@ -62,8 +62,9 @@ export class DoBeeDoPanel extends LitElement {
         display: block;
         box-sizing: border-box;
         padding: 24px;
-        background: var(--lovelace-background, var(--primary-background-color));
+        background: var(--primary-background-color);
         min-height: 100vh;
+        color: var(--primary-text-color);
       }
 
       h1 {
@@ -96,19 +97,19 @@ export class DoBeeDoPanel extends LitElement {
       }
 
       button.primary {
-        background-color: var(--primary-color, #03a9f4);
-        color: var(--text-primary-color, white);
+        background-color: var(--primary-color);
+        color: var(--text-primary-color);
       }
 
       button.secondary {
-        background-color: var(--card-background-color, white);
+        background-color: var(--card-background-color);
         color: var(--primary-text-color);
-        border: 1px solid var(--divider-color, #e0e0e0);
+        border: 1px solid var(--divider-color);
       }
 
       button.warning {
-        background-color: var(--warning-color, #ff9800);
-        color: var(--text-primary-color, white);
+        background-color: var(--warning-color);
+        color: var(--text-primary-color);
       }
 
       button.small {
@@ -119,9 +120,9 @@ export class DoBeeDoPanel extends LitElement {
       /* Input fields */
       input, select {
         padding: 8px 12px;
-        border: 1px solid var(--divider-color, #e0e0e0);
+        border: 1px solid var(--divider-color);
         border-radius: 4px;
-        background: var(--card-background-color, white);
+        background: var(--card-background-color);
         color: var(--primary-text-color);
         font-size: 14px;
         font-family: inherit;
@@ -130,7 +131,7 @@ export class DoBeeDoPanel extends LitElement {
 
       input:focus, select:focus {
         outline: none;
-        border-color: var(--primary-color, #03a9f4);
+        border-color: var(--primary-color);
       }
 
       /* Board selector */
@@ -144,22 +145,23 @@ export class DoBeeDoPanel extends LitElement {
       .board-chip {
         padding: 8px 16px;
         border-radius: 16px;
-        background: var(--card-background-color, white);
-        border: 2px solid var(--divider-color, #e0e0e0);
+        background: var(--card-background-color);
+        border: 2px solid var(--divider-color);
         cursor: pointer;
         transition: all 0.2s ease;
+        color: var(--primary-text-color);
       }
 
       .board-chip:hover {
-        border-color: var(--primary-color, #03a9f4);
+        border-color: var(--primary-color);
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px var(--ha-card-box-shadow, rgba(0,0,0,0.1));
       }
 
       .board-chip.selected {
-        background: var(--primary-color, #03a9f4);
-        color: var(--text-primary-color, white);
-        border-color: var(--primary-color, #03a9f4);
+        background: var(--primary-color);
+        color: var(--text-primary-color);
+        border-color: var(--primary-color);
       }
 
       /* Columns layout */
@@ -172,10 +174,10 @@ export class DoBeeDoPanel extends LitElement {
 
       .column {
         flex: 0 0 300px;
-        background: var(--card-background-color, white);
-        border-radius: 8px;
+        background: var(--card-background-color);
+        border-radius: var(--ha-card-border-radius, 8px);
         padding: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,0.1));
         display: flex;
         flex-direction: column;
         max-height: calc(100vh - 300px);
@@ -195,7 +197,7 @@ export class DoBeeDoPanel extends LitElement {
         font-size: 12px;
         font-weight: 400;
         color: var(--secondary-text-color);
-        background: var(--divider-color, #e0e0e0);
+        background: var(--divider-color);
         padding: 2px 8px;
         border-radius: 12px;
       }
@@ -211,8 +213,8 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Task cards */
       .task-card {
-        background: var(--lovelace-background, var(--primary-background-color));
-        border: 1px solid var(--divider-color, #e0e0e0);
+        background: var(--primary-background-color);
+        border: 1px solid var(--divider-color);
         border-radius: 6px;
         padding: 12px;
         cursor: pointer;
@@ -220,8 +222,8 @@ export class DoBeeDoPanel extends LitElement {
       }
 
       .task-card:hover {
-        border-color: var(--primary-color, #03a9f4);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 8px var(--ha-card-box-shadow, rgba(0,0,0,0.15));
         transform: translateY(-2px);
       }
 
@@ -246,11 +248,11 @@ export class DoBeeDoPanel extends LitElement {
 
       /* Forms */
       .form-section {
-        background: var(--card-background-color, white);
-        border-radius: 8px;
+        background: var(--card-background-color);
+        border-radius: var(--ha-card-border-radius, 8px);
         padding: 16px;
         margin-bottom: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: var(--ha-card-box-shadow, 0 2px 8px rgba(0,0,0,0.1));
       }
 
       .form-row {
