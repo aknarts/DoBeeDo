@@ -1073,11 +1073,21 @@ export class DoBeeDoPanel extends LitElement {
     }
 
     // Find which column and position we're over
-    const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+    // Try shadowRoot first, fall back to document
+    const elements = this.shadowRoot?.elementsFromPoint?.(touch.clientX, touch.clientY)
+      || document.elementsFromPoint(touch.clientX, touch.clientY);
 
     // Restore the dragging task visibility
     if (draggingEl) {
       draggingEl.style.visibility = 'visible';
+    }
+
+    // Debug: log what elements we found (sample 10% to avoid spam)
+    if (Math.random() < 0.1) {
+      const elemNames = Array.from(elements).slice(0, 5).map(el =>
+        `${el.tagName}.${el.className}`.substring(0, 30)
+      ).join(', ');
+      this._addTouchDebugLog(`ELEM: ${elemNames}`);
     }
 
     // Look for a tasks-list element
